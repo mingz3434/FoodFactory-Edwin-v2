@@ -15,13 +15,13 @@ public class PlayerController_Game : PlayerController{
 
    [Serializable] public struct Status{ public bool bIsDragging; public bool bHookHasLaunched; public Vector3 dragStartPosition; }
 
-   TrajectorySettings trajs = new TrajectorySettings(){maxDragDistance = 2f, launchPower = 10f, upwardAngle = 45f, maxAngle = 45f};
+   TrajectorySettings trajs = new TrajectorySettings(){ maxDragDistance = 2f, launchPower = 10f, upwardAngle = 45f, maxAngle = 45f };
    Status status;
 
-   void Awake() { _.pc = this;}
+   void Awake() { _.pc = this; }
    void Start() { pChar = _.pChar_Game; gs = _.gs as GameState_Game; }
    void FixedUpdate(){
-      //! All fixed update for move only.
+      //! Fixed update for move only.
       if(!pChar) return;
 
       var sc = gs.splineContainer;
