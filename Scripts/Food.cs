@@ -17,20 +17,21 @@ public enum FoodType{
 public class Food : Actor_Game{
 
    public static Food CreateFood(FoodType type, Transform parentTransform, Vector3 position){
-      Food _food;
+      Food _food = new Food();
       switch (type){
-         case FoodType.Chicken_Raw: Instantiate(Resources.Load("Prefabs/Food/Chicken_Raw"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Chicken_Cut: Instantiate(Resources.Load("Prefabs/Food/Chicken_Cut"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Chicken_Strried: Instantiate(Resources.Load("Prefabs/Food/Chicken_Strried"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Chicken_Fried_a: Instantiate(Resources.Load("Prefabs/Food/Chicken_Fried_a"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Chicken_Fried_b: Instantiate(Resources.Load("Prefabs/Food/Chicken_Fried_b"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Chicken_Failed: Instantiate(Resources.Load("Prefabs/Food/Chicken_Failed"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Potato_Raw: Instantiate(Resources.Load("Prefabs/Food/Potato_Raw"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Potato_Cut: Instantiate(Resources.Load("Prefabs/Food/Potato_Cut"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Potato_Fried: Instantiate(Resources.Load("Prefabs/Food/Potato_Fried"), position, parentTransform); _food.transform.position = position; break;
-         case FoodType.Potato_Failed: Instantiate(Resources.Load("Prefabs/Food/Potato_Failed"), position, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Raw: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Raw") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Cut: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Cut") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Strried: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Strried") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Fried_a: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Fried_a") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Fried_b: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Fried_b") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Chicken_Failed: _food = Instantiate(Resources.Load("Prefabs/Food/Chicken_Failed") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Potato_Raw: _food = Instantiate(Resources.Load("Prefabs/Food/Potato_Raw") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Potato_Cut: _food = Instantiate(Resources.Load("Prefabs/Food/Potato_Cut") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Potato_Fried: _food = Instantiate(Resources.Load("Prefabs/Food/Potato_Fried") as Food, parentTransform); _food.transform.position = position; break;
+         case FoodType.Potato_Failed: _food = Instantiate(Resources.Load("Prefabs/Food/Potato_Failed") as Food, parentTransform); _food.transform.position = position; break;
          default: Debug.Log("FoodType not found"); break; //P: which not supposed to happen.
-        }
+      }
+      return _food;
    }
 
    public FoodType type;

@@ -181,7 +181,7 @@ GameObject:
   - component: {fileID: 3304432583091536727}
   - component: {fileID: 4068990213424170342}
   - component: {fileID: 5418399697070470592}
-  - component: {fileID: 4595369356260948604}
+  - component: {fileID: 8593333108877940476}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -308,7 +308,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4595369356260948604
+--- !u!114 &8593333108877940476
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -317,15 +317,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1433093810915306283}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 820b153e4c73aff4799fef59ff83ca0d, type: 3}
+  m_Script: {fileID: 11500000, guid: c12be38245b6adb4da321e45354acbba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spline: {fileID: 0}
   speed: 10
   mass: 1
-  objectContainer: {fileID: 2587255532807021014}
-  hookContainer: {fileID: 4822950346246366283}
-  hook: {fileID: 3506115293699462752}
+  splineContainer: {fileID: 0}
+  slotTransform: {fileID: 0}
+  hookContainerTransform: {fileID: 0}
+  hookTransform: {fileID: 0}
   maxPullDistance: 2
   launchPower: 10
   upwardAngle: 45

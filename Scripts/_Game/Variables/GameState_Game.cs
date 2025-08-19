@@ -8,7 +8,7 @@ using _ = GameInstance;
 [AddComponentMenu("Variables/Game State Game")]
 public class GameState_Game : GameState{
    [Serializable] public struct Assets { public AudioClip game_BGM; }
-   [Serializable] public struct Prefabs { }
+   [Serializable] public struct Prefabs { public Food chickenRaw_Prefab; public Food potatoRaw_Prefab; }
 
    public Assets assets; public Prefabs prefabs;
    public Transform canvasTransform; public AudioSource bgmPlayer;

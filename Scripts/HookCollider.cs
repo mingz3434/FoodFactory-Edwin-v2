@@ -3,14 +3,14 @@ using UnityEngine;
 public class HookCollider : MonoBehaviour
 {
     public Transform objectContainer; // 玩家的 ObjectContainer
-    private PlayerMovement playerMovement;
+    private PlayerController_Game playerMovement;
 
     void Start()
     {
-        playerMovement = GetComponentInParent<PlayerMovement>();
+        playerMovement = GetComponentInParent<PlayerController_Game>();
         if (playerMovement == null)
         {
-            playerMovement = FindObjectOfType<PlayerMovement>();
+            playerMovement = FindObjectOfType<PlayerController_Game>();
         }
     }
 
