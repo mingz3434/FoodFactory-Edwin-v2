@@ -8,29 +8,39 @@ using Unity.Mathematics;
 [AddComponentMenu("Controllers/Player Controller Game")]
 public class PlayerController_Game : PlayerController{
 
+   GameState_Game gs;
    PlayerCharacter_Game pChar;
 
+   [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
+
+   [Serializable] public struct Status{ public bool bIsDragging; public bool bHookHasLaunched; public Vector3 dragStartPosition; }
+
+   TrajectorySettings trajs = new TrajectorySettings(){maxDragDistance = 2f, launchPower = 10f, upwardAngle = 45f, maxAngle = 45f};
+   Status status;
+
    void Awake() { _.pc = this;}
-   void Start() { pChar = _.pChar_Game; }
+   void Start() { pChar = _.pChar_Game; gs = _.gs as GameState_Game; }
    void FixedUpdate(){
       //! All fixed update for move only.
       if(!pChar) return;
 
+      var sc = gs.splineContainer;
+
       float input = Input.GetAxis("Horizontal"); //P: horizontal input
-      pChar.splinePortionValue += input * pChar.speed * Time.fixedDeltaTime / pChar.splineContainer.Spline.GetLength();
-      pChar.splinePortionValue = Mathf.Repeat(pChar.splinePortionValue, 1f);
+      pChar.portionValue += input * pChar.speed * Time.fixedDeltaTime / sc.Spline.GetLength();
+      pChar.portionValue = Mathf.Repeat(pChar.portionValue, 1f); //?
 
-      Vector3 targetPosition = pChar.splineContainer.EvaluatePosition(pChar.splinePortionValue);
+      Vector3 targetPosition = sc.EvaluatePosition(pChar.portionValue);
       targetPosition.y = 3f;
-      Vector3 tangent = math.normalize(pChar.splineContainer.EvaluateTangent(pChar.splinePortionValue));
+      Vector3 tangent = math.normalize(sc.EvaluateTangent(pChar.portionValue));
 
-      // 應用移動
+      // Move
       Vector3 move = tangent * input * pChar.speed;
       pChar.GetComponent<Rigidbody>().AddForce(move - pChar.GetComponent<Rigidbody>().linearVelocity, ForceMode.VelocityChange);
       pChar.GetComponent<Rigidbody>().MovePosition(targetPosition);
 
-      // 面向閉環中心點
-      Vector3 directionToCenter = pChar.splineCenter - pChar.transform.position;
+      // Always face center
+      Vector3 directionToCenter = gs.splineCenter - pChar.transform.position;
       directionToCenter.y = 0;
       if (directionToCenter != Vector3.zero){
          transform.rotation = Quaternion.LookRotation(directionToCenter, Vector3.up);
@@ -44,7 +54,7 @@ public class PlayerController_Game : PlayerController{
 
       if (Input.GetMouseButtonDown(0)) { EnableTrajectory_StartDragging(); }
 
-      if (this.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
+      if (this.status.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
    }
 
 
@@ -103,10 +113,10 @@ public class PlayerController_Game : PlayerController{
 
 
    void EnableTrajectory_StartDragging(){
-      if (this.bHookHasLaunched) return; // Hook 未返回時禁止拉動
-      this.bDragging = true;
-      this.pullStartPosition = Input.mousePosition;
-      this.trajectoryLine.enabled = true;
+      if (this.status.bHookHasLaunched) return; // Hook 未返回時禁止拉動
+      this.status.bIsDragging = true;
+      this.status.dragStartPosition = Input.mousePosition;
+      pChar.trajectoryLine.enabled = true;
    }
 
 
@@ -114,21 +124,23 @@ public class PlayerController_Game : PlayerController{
    void TrajectoryLogics(){ //P: Including release mouse button logics
 
       Action<Vector3, Vector3> updateDrawTrajectoryLine_LineRenderer = (startPos, velocityCombined) => {
-         var points = new Vector3[pChar.trajectoryPoints];
-         for (int i = 0; i < pChar.trajectoryPoints; i++){
-            float time = i * pChar.trajectoryTimeStep;
-            points[i] = startPos + velocity * time + 0.5f * Physics.gravity * time * time;
+         var points = new Vector3[50];
+         for (int i = 0; i < 50; i++){ //P: hardcode 50 temporary
+            float time = i * .05f; //P: Est. each .05s timeframe as segment of trajectory
+            points[i] = startPos + velocityCombined * time + 0.5f * Physics.gravity * time * time;
          }
-         pChar.trajectoryLine.SetPositions(points);
+         pChar.trajectoryLine.lineRenderer.SetPositions(points);
       };
 
-      updateDrawTrajectoryLine( GetFiringStartPosition(), GetVelocity_Combined_ByCalculating_DragDistance() );
+      var velocityCombined = GetVelocity_Combined_ByCalculating_DragDistance();
+
+      updateDrawTrajectoryLine_LineRenderer( GetFiringStartPosition(), velocityCombined );
 
       //P: If release mouse left btn, fire.
       if (Input.GetMouseButtonUp(0)){
-         this.bDragging = false;
-         this.trajectoryLine.enabled = false;
-         FireProjectile(velocity);
+         this.status.bIsDragging = false;
+         pChar.trajectoryLine.enabled = false;
+         FireProjectile(velocityCombined);
       }
    }
 
@@ -137,26 +149,24 @@ public class PlayerController_Game : PlayerController{
       if (pChar.slotTransform.childCount > 0){
          var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
          var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
-         
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
       }
-      else if (pChar.hookTransform != null && !this.bHookHasLaunched){
-         var hook = pChar.hookTransform.gameObject; hook.transform.SetParent(null); this.bHookHasLaunched = true;
+      else if (pChar.hook.transform != null && !this.status.bHookHasLaunched){
+         var hook = pChar.hook.gameObject; hook.transform.SetParent(null); this.status.bHookHasLaunched = true;
          var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
-         
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
          Timer.CreateTimer(hook.gameObject, 3f, () => ResetHook() );
       }
    }
 
    public void ResetHook(){
-      if (pChar.hookTransform == null || pChar.hookContainerTransform == null) return;
+      if (pChar.hook.transform == null || pChar.hookContainerTransform == null) return;
 
-      pChar.isHookLaunched = false;
-      pChar.hookTransform.transform.SetParent(pChar.hookContainerTransform);
-      pChar.hookTransform.transform.localPosition = Vector3.zero;
-      pChar.hookTransform.transform.localRotation = Quaternion.identity;
-      Rigidbody hookRb = pChar.hookTransform.GetComponent<Rigidbody>();
+      this.status.bHookHasLaunched = false;
+      pChar.hook.transform.SetParent(pChar.hookContainerTransform);
+      pChar.hook.transform.localPosition = Vector3.zero;
+      pChar.hook.transform.localRotation = Quaternion.identity;
+      Rigidbody hookRb = pChar.hook.GetComponent<Rigidbody>();
       if (hookRb != null){
          hookRb.useGravity = false;
          hookRb.isKinematic = true;
@@ -180,8 +190,8 @@ public class PlayerController_Game : PlayerController{
    Vector3 GetVelocity_Combined_ByCalculating_DragDistance(){
       //* Remarks: Here only calculating input delta, no lineRenderer involved.
       //P: Get world fly direction first.
-      var delta = Input.mousePosition - this.pullStartPosition;
-      var pullDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
+      var delta = Input.mousePosition - this.status.dragStartPosition;
+      var dragDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
       var flyDirection = -delta.normalized;
 
       var tForward = this.transform.forward;
@@ -200,10 +210,10 @@ public class PlayerController_Game : PlayerController{
       }
 
       //P: Calculate initial xComp velocity
-      var velocity_xComponent = worldFlyDirection * pullDistance * pChar.launchPower;
+      var velocity_xComponent = worldFlyDirection * dragDistance * this.trajs.launchPower;
 
       //P: Add yComp(height) and become vector combined
-      var radian = pChar.upwardAngle * Mathf.Deg2Rad;
+      var radian = this.trajs.upwardAngle * Mathf.Deg2Rad;
       var velocity_Combined = new Vector3(velocity_xComponent.x, velocity_xComponent.magnitude * Mathf.Sin(radian), velocity_xComponent.z * Mathf.Cos(radian));
       return velocity_Combined;
    }

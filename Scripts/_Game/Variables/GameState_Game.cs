@@ -15,7 +15,7 @@ public class GameState_Game : GameState{
    public Assets assets; public Prefabs prefabs;
    
    // 1: Transformssss
-   public Vector3 mapCenter;
+   public Vector3 splineCenter;
    public Transform mapTransform;
    public Transform canvasTransform;
 
