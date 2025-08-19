@@ -2,111 +2,35 @@ using UnityEngine;
 using UnityEngine.Splines;
 using System;
 using System.Collections;
-using Unity.Mathematics;
 using _ = GameInstance;
+using Unity.Mathematics;
 
 [AddComponentMenu("Controllers/Player Controller Game")]
 public class PlayerController_Game : PlayerController{
-   public float speed = 10f; public float mass = 1f;
-   public SplineContainer splineContainer; public SplineContainer GetSplineContainer() { return splineContainer; }
-   Rigidbody rigidbody; public Rigidbody GetRigidbody() { return rigidbody; }
-   private float splinePortionValue = 0f; // 當前在 Spline 上的位置 (0-1)
-   public Transform slotTransform; // 用於存放食物的容器
-   private Vector3 splineCenter; // 閉環的中心點
 
-   // Hook 和 Slingshot 相關
-   public Transform hookContainerTransform; // HookContainer 物件
-   public Transform hookTransform; // Hook 物件（在 HookContainer 下）
-   public float maxPullDistance = 2f; // 最大拉動距離
-   public float launchPower = 10f; // 彈出力度倍數
-   public float upwardAngle = 45f; // 拋物線向上角度 (度)
-   public float maxAngle = 45f; // 限制彈出方向為玩家朝向的 ±45 度
-   private bool isPulling = false;
-   private Vector3 pullStartPos;
-   private LineRenderer trajectoryLine; // 軌跡線
-   private int trajectoryPoints = 50; // 軌跡點數
-   private float trajectoryTimeStep = 0.05f; // 每點時間間隔
-   private bool isHookLaunched = false; // 是否彈出 Hook
+   PlayerCharacter_Game pChar;
 
-   void Start(){
-      Action generalStart = () => {
-         rigidbody = GetComponent<Rigidbody>();
-         rigidbody.mass = mass;
-         rigidbody.useGravity = false;
-         rigidbody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
-         transform.position = new Vector3(transform.position.x, 3f, transform.position.z);
-      };
-
-      Action hookInit = () => {
-         if (!hookContainerTransform) { hookContainerTransform = transform.Find("HookContainer"); }
-         if (hookContainerTransform&& !hookTransform) { hookTransform = hookContainerTransform.Find("Hook"); }
-         if (hookTransform){
-            Rigidbody hookRb = hookTransform.GetComponent<Rigidbody>();
-            hookRb.useGravity = false;
-            hookRb.isKinematic = true; // 初始靜止
-         }
-      };
-
-      Action trajectoryInit = () => {
-         trajectoryLine = gameObject.AddComponent<LineRenderer>();
-         trajectoryLine.positionCount = trajectoryPoints;
-         trajectoryLine.enabled = false;
-         trajectoryLine.startWidth = 0.1f;
-         trajectoryLine.endWidth = 0.1f;
-         trajectoryLine.material = new Material(Shader.Find("Sprites/Default"));
-         trajectoryLine.startColor = Color.yellow;
-         trajectoryLine.endColor = Color.red;
-      };
-
-
-      Action playerPosInit_OnSpline = () => {
-         float3 playerPos = new float3(transform.position.x, transform.position.y, transform.position.z);
-         SplineUtility.GetNearestPoint(splineContainer.Spline, playerPos, out float3 nearestPoint, out float initialT);
-         splinePortionValue = initialT;
-      };
-
-
-      Action calculateSplineCenter = () => {
-         if (!splineContainer) return;
-
-         int samples = 100;
-         Vector3 sum = Vector3.zero;
-         for (int i = 0; i < samples; i++){
-            float t = i / (float)samples;
-            sum += (Vector3)splineContainer.EvaluatePosition(t);
-         }
-         splineCenter = sum / samples;
-         splineCenter.y = 3f;
-      };
-
-
-      generalStart();
-      hookInit();
-      trajectoryInit();
-      playerPosInit_OnSpline();
-      calculateSplineCenter();
-
-   }
-
-
+   void Awake() { _.pc = this;}
+   void Start() { pChar = _.pChar_Game; }
    void FixedUpdate(){
       //! All fixed update for move only.
+      if(!pChar) return;
 
       float input = Input.GetAxis("Horizontal"); //P: horizontal input
-      splinePortionValue += input * speed * Time.fixedDeltaTime / splineContainer.Spline.GetLength();
-      splinePortionValue = Mathf.Repeat(splinePortionValue, 1f);
+      pChar.splinePortionValue += input * pChar.speed * Time.fixedDeltaTime / pChar.splineContainer.Spline.GetLength();
+      pChar.splinePortionValue = Mathf.Repeat(pChar.splinePortionValue, 1f);
 
-      Vector3 targetPosition = splineContainer.EvaluatePosition(splinePortionValue);
+      Vector3 targetPosition = pChar.splineContainer.EvaluatePosition(pChar.splinePortionValue);
       targetPosition.y = 3f;
-      Vector3 tangent = math.normalize(splineContainer.EvaluateTangent(splinePortionValue));
+      Vector3 tangent = math.normalize(pChar.splineContainer.EvaluateTangent(pChar.splinePortionValue));
 
       // 應用移動
-      Vector3 move = tangent * input * speed;
-      rigidbody.AddForce(move - rigidbody.linearVelocity, ForceMode.VelocityChange);
-      rigidbody.MovePosition(targetPosition);
+      Vector3 move = tangent * input * pChar.speed;
+      pChar.GetComponent<Rigidbody>().AddForce(move - pChar.GetComponent<Rigidbody>().linearVelocity, ForceMode.VelocityChange);
+      pChar.GetComponent<Rigidbody>().MovePosition(targetPosition);
 
       // 面向閉環中心點
-      Vector3 directionToCenter = splineCenter - transform.position;
+      Vector3 directionToCenter = pChar.splineCenter - pChar.transform.position;
       directionToCenter.y = 0;
       if (directionToCenter != Vector3.zero){
          transform.rotation = Quaternion.LookRotation(directionToCenter, Vector3.up);
@@ -118,26 +42,26 @@ public class PlayerController_Game : PlayerController{
 
       if (Input.GetKeyDown(KeyCode.E)) { MachineInteractionLogics(); }
 
-      if (Input.GetMouseButtonDown(0)) { DrawNewTrajectoryLogics(); }
+      if (Input.GetMouseButtonDown(0)) { EnableTrajectory_StartDragging(); }
 
-      if (isPulling) { OpearateTrajectoryLogics(); } //! including release logics at the end.
+      if (this.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
    }
 
 
    void PickUpFoodLogics(){
 
-      // Confirm empty slot.
-      if (slotTransform.childCount > 0) { Debug.Log("ObjectContainer is full!"); return; }
+      //P: Confirm empty slot.
+      if (pChar.slotTransform.childCount > 0) { Debug.Log("ObjectContainer is full!"); return; }
 
-      // Get food below player.
-      Ray ray = new Ray(transform.position, Vector3.down);
+      //P: Get food below player.
+      Ray ray = new Ray(pChar.transform.position, Vector3.down);
       RaycastHit hit;
       Physics.Raycast(ray, out hit, 4f);
 
-      // Return when null.
-      if(hit.collider == null) {Debug.Log("No hit"); return; }
+      //P: Return when null.
+      if(hit.collider == null) {Debug.Log("PC: PickUpFood: No hit collider."); return; }
 
-      // If it's food, destroy it's conveyor mover comp, then set its rb to desired state.
+      //P: If it's food, destroy it's conveyor mover comp, then set its rb to desired state.
       if (hit.collider.CompareTag("Food")){
          GameObject food = hit.collider.gameObject;
          Destroy(food.GetComponent<ConveyorMover>());
@@ -148,7 +72,7 @@ public class PlayerController_Game : PlayerController{
             foodRb.linearVelocity = Vector3.zero;
             foodRb.angularVelocity = Vector3.zero;
          }
-         food.transform.SetParent(slotTransform);
+         food.transform.SetParent(pChar.slotTransform);
          food.transform.localPosition = Vector3.zero;
          Debug.Log("Food placed in ObjectContainer!");
       }
@@ -178,103 +102,61 @@ public class PlayerController_Game : PlayerController{
    }
 
 
-   void DrawNewTrajectoryLogics(){
-      if (isHookLaunched) return; // Hook 未返回時禁止拉動
-      isPulling = true;
-      pullStartPos = Input.mousePosition;
-      trajectoryLine.enabled = true;
+   void EnableTrajectory_StartDragging(){
+      if (this.bHookHasLaunched) return; // Hook 未返回時禁止拉動
+      this.bDragging = true;
+      this.pullStartPosition = Input.mousePosition;
+      this.trajectoryLine.enabled = true;
    }
 
-   void OpearateTrajectoryLogics(){ //P: including release mouse button logics
-      Vector3 pullDelta = Input.mousePosition - pullStartPos;
-      float pullDistance = Mathf.Clamp(pullDelta.magnitude / Screen.height, 0f, maxPullDistance);
-      Vector3 pullDirection = -pullDelta.normalized;
 
-      // 將螢幕空間方向映射到玩家所在平面（y=0）
-      Vector3 playerForward = transform.forward;
-      playerForward.y = 0;
-      playerForward.Normalize();
-      Vector3 playerRight = transform.right;
-      playerRight.y = 0;
-      playerRight.Normalize();
 
-      // 映射：y+（向上拖拽）對應 playerForward，x 對應 playerRight
-      Vector3 worldPullDir = (pullDirection.x * playerRight + pullDirection.y * playerForward).normalized;
+   void TrajectoryLogics(){ //P: Including release mouse button logics
 
-      // 限制在玩家朝向的 ±45 度範圍
-      float angle = Vector3.SignedAngle(worldPullDir, playerForward, Vector3.up);
-      if (Mathf.Abs(angle) > maxAngle){
-         float clampedAngle = Mathf.Sign(angle) * maxAngle;
-         worldPullDir = Quaternion.Euler(0, clampedAngle, 0) * playerForward;
-      }
+      Action<Vector3, Vector3> updateDrawTrajectoryLine_LineRenderer = (startPos, velocityCombined) => {
+         var points = new Vector3[pChar.trajectoryPoints];
+         for (int i = 0; i < pChar.trajectoryPoints; i++){
+            float time = i * pChar.trajectoryTimeStep;
+            points[i] = startPos + velocity * time + 0.5f * Physics.gravity * time * time;
+         }
+         pChar.trajectoryLine.SetPositions(points);
+      };
 
-      // 計算初速度（與拉動方向一致）
-      Vector3 velocity = worldPullDir * pullDistance * launchPower;
+      updateDrawTrajectoryLine( GetFiringStartPosition(), GetVelocity_Combined_ByCalculating_DragDistance() );
 
-      // 添加向上分量
-      float rad = upwardAngle * Mathf.Deg2Rad;
-      velocity = new Vector3(velocity.x, velocity.magnitude * Mathf.Sin(rad), velocity.z * Mathf.Cos(rad));
-
-      // 確定軌跡起始點
-      Vector3 startPos = slotTransform.childCount > 0 ? slotTransform.position : hookContainerTransform.position;
-
-      // 更新軌跡線
-      UpdateDrawTrajectoryLine(startPos, velocity);
-
+      //P: If release mouse left btn, fire.
       if (Input.GetMouseButtonUp(0)){
-         isPulling = false;
-         trajectoryLine.enabled = false;
+         this.bDragging = false;
+         this.trajectoryLine.enabled = false;
          FireProjectile(velocity);
       }
    }
 
-   void UpdateDrawTrajectoryLine(Vector3 startPos, Vector3 velocity){
-      Vector3[] points = new Vector3[trajectoryPoints];
-      for (int i = 0; i < trajectoryPoints; i++){
-         float time = i * trajectoryTimeStep;
-         points[i] = startPos + velocity * time + 0.5f * Physics.gravity * time * time;
-      }
-      trajectoryLine.SetPositions(points);
-   }
 
    void FireProjectile(Vector3 velocity){
-      GameObject projectile = null;
-      Rigidbody projRb = null;
-
-      if (slotTransform.childCount > 0){
-         // 彈出 ObjectContainer 中的第一個物件
-         projectile = slotTransform.GetChild(0).gameObject;
-         projectile.transform.SetParent(null);
-         projRb = projectile.GetComponent<Rigidbody>();
-         if (projRb == null) { projRb = projectile.AddComponent<Rigidbody>(); }
-         projRb.isKinematic = false;
-         projRb.useGravity = true;
-         projRb.mass = 1f;
-         projRb.linearVelocity = Vector3.zero;
-         projRb.angularVelocity = Vector3.zero;
-         projRb.AddForce(velocity, ForceMode.VelocityChange);
+      if (pChar.slotTransform.childCount > 0){
+         var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
+         var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
+         
+         rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
       }
-      else if (hookTransform != null && !isHookLaunched){
-         // 彈出 Hook
-         projectile = hookTransform.gameObject;
-         projectile.transform.SetParent(null);
-         isHookLaunched = true;
-         projRb = projectile.GetComponent<Rigidbody>();
-         projRb.isKinematic = false;
-         projRb.useGravity = true;
-         projRb.AddForce(velocity, ForceMode.VelocityChange);
-         StartCoroutine(AutoResetHook(3f));
+      else if (pChar.hookTransform != null && !this.bHookHasLaunched){
+         var hook = pChar.hookTransform.gameObject; hook.transform.SetParent(null); this.bHookHasLaunched = true;
+         var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
+         
+         rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
+         Timer.CreateTimer(hook.gameObject, 3f, () => ResetHook() );
       }
    }
 
    public void ResetHook(){
-      if (hookTransform == null || hookContainerTransform == null) return;
+      if (pChar.hookTransform == null || pChar.hookContainerTransform == null) return;
 
-      isHookLaunched = false;
-      hookTransform.transform.SetParent(hookContainerTransform);
-      hookTransform.transform.localPosition = Vector3.zero;
-      hookTransform.transform.localRotation = Quaternion.identity;
-      Rigidbody hookRb = hookTransform.GetComponent<Rigidbody>();
+      pChar.isHookLaunched = false;
+      pChar.hookTransform.transform.SetParent(pChar.hookContainerTransform);
+      pChar.hookTransform.transform.localPosition = Vector3.zero;
+      pChar.hookTransform.transform.localRotation = Quaternion.identity;
+      Rigidbody hookRb = pChar.hookTransform.GetComponent<Rigidbody>();
       if (hookRb != null){
          hookRb.useGravity = false;
          hookRb.isKinematic = true;
@@ -283,10 +165,46 @@ public class PlayerController_Game : PlayerController{
       }
    }
 
-   IEnumerator AutoResetHook(float delay){
-      yield return new WaitForSeconds(delay);
-      ResetHook();
+
+
+
+
+
+
+
+
+   Vector3 GetFiringStartPosition(){
+      return pChar.slotTransform.childCount > 0 ? pChar.slotTransform.position : pChar.hookContainerTransform.position;
    }
 
+   Vector3 GetVelocity_Combined_ByCalculating_DragDistance(){
+      //* Remarks: Here only calculating input delta, no lineRenderer involved.
+      //P: Get world fly direction first.
+      var delta = Input.mousePosition - this.pullStartPosition;
+      var pullDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
+      var flyDirection = -delta.normalized;
 
+      var tForward = this.transform.forward;
+      var tRight = this.transform.right;
+      var flatForward = new Vector3(tForward.x, 0, tForward.z).normalized;
+      var flatRight   = new Vector3(tRight.x, 0, tRight.z).normalized;
+
+      var worldFlyDirection = (flyDirection.y * flatForward + flyDirection.x * flatRight).normalized;
+
+      //P: Limit fly direction within -45 to +45 degree.
+      var angle = Vector3.SignedAngle(worldFlyDirection, flatForward, Vector3.up);
+
+      if (Mathf.Abs(angle) > 45){
+         var clampedAngle = Mathf.Sign(angle) * 45;
+         worldFlyDirection = Quaternion.Euler(0, clampedAngle, 0) * flatForward;
+      }
+
+      //P: Calculate initial xComp velocity
+      var velocity_xComponent = worldFlyDirection * pullDistance * pChar.launchPower;
+
+      //P: Add yComp(height) and become vector combined
+      var radian = pChar.upwardAngle * Mathf.Deg2Rad;
+      var velocity_Combined = new Vector3(velocity_xComponent.x, velocity_xComponent.magnitude * Mathf.Sin(radian), velocity_xComponent.z * Mathf.Cos(radian));
+      return velocity_Combined;
+   }
 }

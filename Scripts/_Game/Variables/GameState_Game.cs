@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Splines;
 using _ = GameInstance;
 
 
@@ -10,9 +11,27 @@ public class GameState_Game : GameState{
    [Serializable] public struct Assets { public AudioClip game_BGM; }
    [Serializable] public struct Prefabs { public Food chickenRaw_Prefab; public Food potatoRaw_Prefab; }
 
+   // 0: Assetssss
    public Assets assets; public Prefabs prefabs;
-   public Transform canvasTransform; public AudioSource bgmPlayer;
+   
+   // 1: Transformssss
+   public Vector3 mapCenter;
    public Transform mapTransform;
+   public Transform canvasTransform;
+
+   // 2: Spline Container
+   public SplineContainer splineContainer;
+
+   // 3: BGM Player
+   public AudioSource bgmPlayer;
+
+   // 4: Machines in Scene
+   public GameObject mixer;
+   public GameObject fryer;
+   public GameObject cutter;
+   public GameObject conveyorController;
+   public GameObject foodSpawner;
+   
 
    void Awake(){ _.gs = this; }
 
