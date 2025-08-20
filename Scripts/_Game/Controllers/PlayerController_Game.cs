@@ -10,6 +10,7 @@ public class PlayerController_Game : PlayerController{
 
    GameState_Game gs;
    PlayerCharacter_Game pChar;
+   public Camera camera;
 
    [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
 
@@ -43,7 +44,8 @@ public class PlayerController_Game : PlayerController{
       Vector3 directionToCenter = gs.splineCenter - pChar.transform.position;
       directionToCenter.y = 0;
       if (directionToCenter != Vector3.zero){
-         transform.rotation = Quaternion.LookRotation(directionToCenter, Vector3.up);
+         var temp = Quaternion.LookRotation(directionToCenter, Vector3.up);
+         pChar.transform.rotation = Quaternion.Slerp(pChar.transform.rotation, temp, 0.1f);
       }
    }
 
