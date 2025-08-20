@@ -12,6 +12,8 @@ public class PlayerController_Game : PlayerController{
    PlayerCharacter_Game pChar;
    public Camera camera;
 
+   public TrajectoryLine trajectoryLine;
+   public Hook hook;
    [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
 
    [Serializable] public struct Status{ public bool bIsDragging; public bool bHookHasLaunched; public Vector3 dragStartPosition; }
@@ -20,7 +22,36 @@ public class PlayerController_Game : PlayerController{
    Status status;
 
    void Awake() { _.pc = this; }
-   void Start() { pChar = _.pChar_Game; gs = _.gs as GameState_Game; }
+   void Start() {
+
+      pChar = _.pChar_Game;
+      gs = _.gs as GameState_Game;
+      trajectoryLine = TrajectoryLine.CreateTrajectoryLine(gs.prefabs.trajectoryLine_Prefab, pChar.transform);
+      hook = Hook.CreateHook(gs.prefabs.hook_Prefab, pChar.hookContainerTransform);
+   
+      Action setPlayerStartingPos = () => {
+         var spline = gs.splineContainer.Spline;
+         pChar.transform.position = spline.EvaluatePosition(0);
+         pChar.transform.Translate(new Vector3(0, 3, 0));
+      };
+
+      Action calculateMapCenter = () => {
+         if (!gs.splineContainer) return;
+
+         int samples = 100;
+         Vector3 sum = Vector3.zero;
+         for (int i = 0; i < samples; i++){
+            float t = i / (float)samples;
+            sum += (Vector3)gs.splineContainer.EvaluatePosition(t);
+         }
+         gs.splineCenter = sum / samples;
+         gs.splineCenter.y = 3f;
+      };
+
+      setPlayerStartingPos();
+      calculateMapCenter();
+
+   }
    void FixedUpdate(){
       //! Fixed update for move only.
       if(!pChar) return;
@@ -118,7 +149,7 @@ public class PlayerController_Game : PlayerController{
       if (this.status.bHookHasLaunched) return; // Hook 未返回時禁止拉動
       this.status.bIsDragging = true;
       this.status.dragStartPosition = Input.mousePosition;
-      pChar.trajectoryLine.enabled = true;
+      this.trajectoryLine.enabled = true;
    }
 
 
@@ -131,7 +162,7 @@ public class PlayerController_Game : PlayerController{
             float time = i * .05f; //P: Est. each .05s timeframe as segment of trajectory
             points[i] = startPos + velocityCombined * time + 0.5f * Physics.gravity * time * time;
          }
-         pChar.trajectoryLine.lineRenderer.SetPositions(points);
+         this.trajectoryLine.lineRenderer.SetPositions(points);
       };
 
       var velocityCombined = GetVelocity_Combined_ByCalculating_DragDistance();
@@ -141,7 +172,7 @@ public class PlayerController_Game : PlayerController{
       //P: If release mouse left btn, fire.
       if (Input.GetMouseButtonUp(0)){
          this.status.bIsDragging = false;
-         pChar.trajectoryLine.enabled = false;
+         this.trajectoryLine.enabled = false;
          FireProjectile(velocityCombined);
       }
    }
@@ -153,8 +184,8 @@ public class PlayerController_Game : PlayerController{
          var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
       }
-      else if (pChar.hook.transform != null && !this.status.bHookHasLaunched){
-         var hook = pChar.hook.gameObject; hook.transform.SetParent(null); this.status.bHookHasLaunched = true;
+      else if (this.hook.transform != null && !this.status.bHookHasLaunched){
+         var hook = this.hook.gameObject; hook.transform.SetParent(null); this.status.bHookHasLaunched = true;
          var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
          Timer.CreateTimer(hook.gameObject, 3f, () => ResetHook() );
@@ -162,13 +193,13 @@ public class PlayerController_Game : PlayerController{
    }
 
    public void ResetHook(){
-      if (pChar.hook.transform == null || pChar.hookContainerTransform == null) return;
+      if (this.hook.transform == null || pChar.hookContainerTransform == null) return;
 
       this.status.bHookHasLaunched = false;
-      pChar.hook.transform.SetParent(pChar.hookContainerTransform);
-      pChar.hook.transform.localPosition = Vector3.zero;
-      pChar.hook.transform.localRotation = Quaternion.identity;
-      Rigidbody hookRb = pChar.hook.GetComponent<Rigidbody>();
+      this.hook.transform.SetParent(pChar.hookContainerTransform);
+      this.hook.transform.localPosition = Vector3.zero;
+      this.hook.transform.localRotation = Quaternion.identity;
+      Rigidbody hookRb = this.hook.GetComponent<Rigidbody>();
       if (hookRb != null){
          hookRb.useGravity = false;
          hookRb.isKinematic = true;
