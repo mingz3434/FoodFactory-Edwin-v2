@@ -45,7 +45,6 @@ GameObject:
   - component: {fileID: 2986247201360715291}
   - component: {fileID: 1032952587368299532}
   - component: {fileID: 7276143176135916521}
-  - component: {fileID: 8125760163379734810}
   m_Layer: 0
   m_Name: Cutter
   m_TagString: Machine
@@ -631,22 +630,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
---- !u!114 &8125760163379734810
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8359901461110438262}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59e7382a853c439469cc895392f85e75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 0
-  recipes:
-  - {fileID: 11400000, guid: 07fd6f439837a774980c7b25c608ed78, type: 2}
-  - {fileID: 11400000, guid: 3e6ead8d5d59ddb438b7e7b96c4cb9ce, type: 2}
-  maxSlots: 1
-  slotPositions:
-  - {fileID: 7663313825345980046}

@@ -8,12 +8,11 @@ using Unity.Mathematics;
 [AddComponentMenu("Controllers/Player Controller Game")]
 public class PlayerController_Game : PlayerController{
 
-   GameState_Game gs;
-   PlayerCharacter_Game pChar;
-   public Camera camera;
+   [ReadOnly] public GameState_Game gs; public GameState_Game GetGameState(){ return gs; }
+   [ReadOnly] public PlayerCharacter_Game pChar;
+   [ReadOnly] public TrajectoryLine trajectoryLine;
+   [ReadOnly] public Hook hook;
 
-   public TrajectoryLine trajectoryLine;
-   public Hook hook;
    [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
 
    [Serializable] public struct Status{ public bool bIsDragging; public bool bHookHasLaunched; public Vector3 dragStartPosition; }
@@ -26,6 +25,7 @@ public class PlayerController_Game : PlayerController{
 
       pChar = _.pChar_Game;
       gs = _.gs as GameState_Game;
+
       trajectoryLine = TrajectoryLine.CreateTrajectoryLine(gs.prefabs.trajectoryLine_Prefab, pChar.transform);
       hook = Hook.CreateHook(gs.prefabs.hook_Prefab, pChar.hookContainerTransform);
    
@@ -68,8 +68,8 @@ public class PlayerController_Game : PlayerController{
 
       // Move
       Vector3 move = tangent * input * pChar.speed;
-      pChar.GetComponent<Rigidbody>().AddForce(move - pChar.GetComponent<Rigidbody>().linearVelocity, ForceMode.VelocityChange);
-      pChar.GetComponent<Rigidbody>().MovePosition(targetPosition);
+      pChar.GetRigidbody().AddForce(move - pChar.GetRigidbody().linearVelocity, ForceMode.VelocityChange);
+      pChar.GetRigidbody().MovePosition(targetPosition);
 
       // Always face center
       Vector3 directionToCenter = gs.splineCenter - pChar.transform.position;
@@ -106,50 +106,43 @@ public class PlayerController_Game : PlayerController{
 
       //P: If it's food, destroy it's conveyor mover comp, then set its rb to desired state.
       if (hit.collider.CompareTag("Food")){
-         GameObject food = hit.collider.gameObject;
-         Destroy(food.GetComponent<ConveyorMover>());
-         Rigidbody foodRb = food.GetComponent<Rigidbody>();
-         if (foodRb){
-            foodRb.isKinematic = true;
-            foodRb.useGravity = false;
-            foodRb.linearVelocity = Vector3.zero;
-            foodRb.angularVelocity = Vector3.zero;
-         }
-         food.transform.SetParent(pChar.slotTransform);
-         food.transform.localPosition = Vector3.zero;
+         var foodContainer_GO = hit.collider.gameObject;
+         
+         foodContainer_GO.transform.SetParent(pChar.slotTransform);
+         foodContainer_GO.transform.localPosition = Vector3.zero;
          Debug.Log("Food placed in ObjectContainer!");
       }
       
    }
 
    void MachineInteractionLogics(){
-      Machine[] allMachines = FindObjectsOfType<Machine>();
-      foreach (Machine machine in allMachines){
+      // Machine[] allMachines = FindObjectsOfType<Machine>();
+      // foreach (Machine machine in allMachines){
 
-         //! Case: Mixer
-         if (machine.type == Machine.MachineType.Mixer){
-            if (machine.needsInput) { machine.StopMixer(); }
-            else{ // 運作期間按 E，銷毀食物
-               for (int i = machine.slotPositions.Length - 1; i >= 0; i--){
-                  Food food = machine.GetFoodAtSlot(i);
-                  if (food != null){
-                     Destroy(food.gameObject);
-                     machine.RemoveFood(i);
-                     Debug.Log("Mixer: Food destroyed during processing.");
-                  }
-               }
-            }
-         }
+      //    //! Case: Mixer
+      //    if (machine.type == Machine.MachineType.Mixer){
+      //       if (machine.needsInput) { machine.StopMixer(); }
+      //       else{ // 運作期間按 E，銷毀食物
+      //          for (int i = machine.slotPositions.Length - 1; i >= 0; i--){
+      //             Food food = machine.GetFoodAtSlot(i);
+      //             if (food != null){
+      //                Destroy(food.gameObject);
+      //                machine.RemoveFood(i);
+      //                Debug.Log("Mixer: Food destroyed during processing.");
+      //             }
+      //          }
+      //       }
+      //    }
 
-      }
+      // }
    }
 
 
    void EnableTrajectory_StartDragging(){
       if (this.status.bHookHasLaunched) return; // Hook 未返回時禁止拉動
       this.status.bIsDragging = true;
-      this.status.dragStartPosition = Input.mousePosition;
-      this.trajectoryLine.enabled = true;
+      this.status.dragStartPosition = Input.mousePosition; Debug.Log(Input.mousePosition);
+      this.trajectoryLine.lineRenderer.enabled = true;
    }
 
 
@@ -172,7 +165,7 @@ public class PlayerController_Game : PlayerController{
       //P: If release mouse left btn, fire.
       if (Input.GetMouseButtonUp(0)){
          this.status.bIsDragging = false;
-         this.trajectoryLine.enabled = false;
+         this.trajectoryLine.lineRenderer.enabled = false;
          FireProjectile(velocityCombined);
       }
    }
@@ -199,10 +192,10 @@ public class PlayerController_Game : PlayerController{
       this.hook.transform.SetParent(pChar.hookContainerTransform);
       this.hook.transform.localPosition = Vector3.zero;
       this.hook.transform.localRotation = Quaternion.identity;
-      Rigidbody hookRb = this.hook.GetComponent<Rigidbody>();
-      if (hookRb != null){
-         hookRb.useGravity = false;
-         hookRb.isKinematic = true;
+      var hookRb = this.hook.GetComponent<Rigidbody>();
+      if (hookRb){
+         if(hookRb.useGravity) hookRb.useGravity = false;
+         if(!hookRb.isKinematic) hookRb.isKinematic = true;
          hookRb.linearVelocity = Vector3.zero;
          hookRb.angularVelocity = Vector3.zero;
       }
@@ -227,19 +220,20 @@ public class PlayerController_Game : PlayerController{
       var dragDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
       var flyDirection = -delta.normalized;
 
-      var tForward = this.transform.forward;
-      var tRight = this.transform.right;
-      var flatForward = new Vector3(tForward.x, 0, tForward.z).normalized;
-      var flatRight   = new Vector3(tRight.x, 0, tRight.z).normalized;
+      var playerForward = pChar.transform.forward; //!!!
+      var playerRight = pChar.transform.right; //!!!
+      var inputForward = new Vector3(playerForward.x, 0, playerForward.z).normalized;
+      var inputRight   = new Vector3(playerRight.x, 0, playerRight.z).normalized;
 
-      var worldFlyDirection = (flyDirection.y * flatForward + flyDirection.x * flatRight).normalized;
+      var worldFlyDirection = (flyDirection.y * inputForward + flyDirection.x * inputRight).normalized;
+
 
       //P: Limit fly direction within -45 to +45 degree.
-      var angle = Vector3.SignedAngle(worldFlyDirection, flatForward, Vector3.up);
+      var angle = Vector3.SignedAngle(worldFlyDirection, inputForward, Vector3.up);
 
       if (Mathf.Abs(angle) > 45){
          var clampedAngle = Mathf.Sign(angle) * 45;
-         worldFlyDirection = Quaternion.Euler(0, clampedAngle, 0) * flatForward;
+         worldFlyDirection = Quaternion.Euler(0, clampedAngle, 0) * inputForward;
       }
 
       //P: Calculate initial xComp velocity
@@ -250,4 +244,6 @@ public class PlayerController_Game : PlayerController{
       var velocity_Combined = new Vector3(velocity_xComponent.x, velocity_xComponent.magnitude * Mathf.Sin(radian), velocity_xComponent.z * Mathf.Cos(radian));
       return velocity_Combined;
    }
+
+
 }

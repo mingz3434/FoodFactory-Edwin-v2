@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 1042992491036142273}
   - component: {fileID: 5997802589623086382}
   - component: {fileID: 3939220111661597590}
-  - component: {fileID: 97816142043031110}
   - component: {fileID: 4769596760136872830}
   m_Layer: 10
   m_Name: Hook
@@ -507,19 +506,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &97816142043031110
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6612675130514834604}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c9dc238577fc9348a7096f3a30ba376, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectContainer: {fileID: 0}
 --- !u!114 &4769596760136872830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -532,3 +518,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d215c34e48673940a423cffe5d1e56b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  objectContainer: {fileID: 0}
