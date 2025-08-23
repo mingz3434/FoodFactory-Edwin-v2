@@ -63,7 +63,7 @@ public class FoodTray : Actor_Game {
    void OnCollisionEnter(Collision collision){
       var go = collision.gameObject;
       if (!food) return; //!!!!!!!!!!!
-      if (go.CompareTag("Mixer")) { var mixer = go.GetComponent<Mixer>(); if(!mixer) return; OnCollidedWith_Mixer(mixer); };
+      if (go.CompareTag("Mixer")) { var mixer = go.GetComponent<Mixer>(); if(!mixer) return; OnCollidedWith_Mixer(mixer); PopFillBar_and_Run(); };
       if (go.CompareTag("Fryer")) { var fryer = go.GetComponent<Fryer>(); if (!fryer) return; OnCollidedWith_Fryer(fryer); }
       if (go.CompareTag("Cutter")) { var cutter = go.GetComponent<Cutter>(); if (!cutter) return; OnCollidedWith_Cutter(cutter); }
    }
@@ -72,16 +72,34 @@ public class FoodTray : Actor_Game {
 
    void OnCollidedWith_Mixer(Mixer mixer){
       var slot = mixer.slot;
-      if (slot.transform.childCount == 0) { Debug.Log("FoodTray: Slot available, attaching the food tray to the mixer..."); this.SnapTo(mixer.slot.transform); this.PopFillBar_and_Run(); }
+      if (slot.transform.childCount == 0) {
+         Debug.Log("FoodTray: Slot available, attaching the food tray to the mixer...");
+         FM_Comparators.Compare(this, this.food, mixer);
+      }
       else { Debug.Log("FoodTray: Slot used!"); }
    }
 
    void OnCollidedWith_Fryer(Fryer fryer){
-      
+      var slots = fryer.slots;
+      bool bAvailable = false;
+      for (int i = 0; i < slots.Length; i++) {
+         if (slots[i].transform.childCount == 0) {
+            bAvailable = true;
+            break;
+         }
+      }
+      if (bAvailable) {
+         Debug.Log("FoodTray: Slot available, attaching the food tray to the fryer...");
+         FM_Comparators.Compare(this, this.food, fryer);
+      }
    }
 
    void OnCollidedWith_Cutter(Cutter cutter){
-      
+      var slot = cutter.slot;
+      if (slot.transform.childCount == 0) {
+         Debug.Log("FoodTray: Slot available, attaching the food tray to the cutter...");
+         FM_Comparators.Compare(this, this.food, cutter);
+      }
    }
 
    public void SnapTo(Transform newParentTransform, bool bResetRotation = true){

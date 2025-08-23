@@ -8,14 +8,14 @@ using _ = GameInstance;
 
 [AddComponentMenu("Variables/Game State Game")]
 public class GameState_Game : GameState{
-   [Serializable] public struct Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite; public Sprite potatoRaw_Sprite; }
+   [Serializable] public struct Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite, chickenStirred_Sprite, chickenSliced_Sprite, chickenFried_Sprite, nugget_Sprite, chickenFailed_Sprite; public Sprite potatoRaw_Sprite, potatoSliced_Sprite, potatoFried_Sprite, potatoCompleted_Sprite, potatoFailed_Sprite; }
    [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; }
    [Serializable] public struct ConveyorSettings { public float segmentLength, width; }
 
 
    // Spline Container
    public SplineContainer splineContainer;
-   [ReadOnly]public Vector3 splineCenter;
+   [ReadOnly] public Vector3 splineCenter;
 
    // Assetssss
    public Assets assets; public Prefabs prefabs;
@@ -31,7 +31,9 @@ public class GameState_Game : GameState{
    public AudioSource bgmPlayer;
 
 
-   public List<FoodTray> pendingProcessFoods;
+   // Orders
+   public List<Order> orders = new List<Order>();
+   public int remainingTime = 300;
 
    // Machines in Scene
    //! 儘可能唔好use global machine, as they are supposed to handle all their own stuffs by their own.

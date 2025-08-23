@@ -31,6 +31,7 @@ public class Hook : Actor_Game{
       foodTray.gameObject.transform.localPosition = Vector3.zero;
       foodTray.rb.isKinematic = true;
       foodTray.rb.useGravity = false;
+      if(foodTray.bInTrack) foodTray.bInTrack = false;
 
       this.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
       this.ResetRigidbody();

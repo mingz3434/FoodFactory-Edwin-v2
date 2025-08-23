@@ -249,3 +249,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9455fe9b32e90584fbe51a6e383b6cf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  slots:
+  - {fileID: 5668870970352461832}
+  - {fileID: 3253845749294984611}
+  - {fileID: 4478691749440507979}
+  - {fileID: 4360226859825573475}

@@ -409,7 +409,16 @@ MonoBehaviour:
   assets:
     game_BGM: {fileID: 0}
     chickenRaw_Sprite: {fileID: 21300000, guid: ac46e192a67fa1641b966cdc1f77466c, type: 3}
+    chickenStirred_Sprite: {fileID: 21300000, guid: 107555a66fc56744a92a078a30ce0f46, type: 3}
+    chickenSliced_Sprite: {fileID: 21300000, guid: 78776aa0de1a1284e8ed792d04c8f1f1, type: 3}
+    chickenFried_Sprite: {fileID: 21300000, guid: c92d77d4ae616a445aa70996a83a4820, type: 3}
+    nugget_Sprite: {fileID: 21300000, guid: ea9dfb4e8046d78419537c63bc439848, type: 3}
+    chickenFailed_Sprite: {fileID: 21300000, guid: 617e18cce5d4cfc49bcdcb078a41cb94, type: 3}
     potatoRaw_Sprite: {fileID: 21300000, guid: 41924fa7766a56f47ab93d39c93d287d, type: 3}
+    potatoSliced_Sprite: {fileID: 21300000, guid: d2fb320b1af0060418670c15b3295f30, type: 3}
+    potatoFried_Sprite: {fileID: 21300000, guid: d2fb320b1af0060418670c15b3295f30, type: 3}
+    potatoCompleted_Sprite: {fileID: 21300000, guid: 389e2d6c89f2aeb4d93650880cc7764f, type: 3}
+    potatoFailed_Sprite: {fileID: 21300000, guid: 81dccc3e895082c479a7fc9377cea1db, type: 3}
   prefabs:
     foodTray_Prefab: {fileID: 8869386820917989431, guid: 46201822b03dd704fbd120f7ae1a4b1e, type: 3}
     trajectoryLine_Prefab: {fileID: 2456924802157857401, guid: ae25756080f80ff4e9aa92a45365b23b, type: 3}
@@ -2054,7 +2063,7 @@ PrefabInstance:
       objectReference: {fileID: 1446556562}
     - target: {fileID: 6514614100909983536, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_VersionIndex
-      value: 125
+      value: 131
       objectReference: {fileID: 0}
     - target: {fileID: 7276143176135916521, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_Mesh
