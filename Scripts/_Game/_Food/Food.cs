@@ -7,13 +7,17 @@ public class Food : Actor_Game{
 
    public enum RawFood{ Chicken, Potato }
    public enum State{ Raw, Sliced, Stirred, Fried, DishReady }
+
+   [SerializeField] RawFood rawFood;
+   [SerializeField] State state = State.Raw;
+
    public static Food CreateFood(Food prefab, Transform parentTransform, RawFood rawFood){
       var food = Instantiate(prefab, parentTransform);
       food.gs = _.gs as GameState_Game;
       var spriteRenderer = food.GetComponent<SpriteRenderer>();
       switch(rawFood){
-         case RawFood.Chicken: spriteRenderer.sprite = food.gs.assets.chickenRaw_Sprite; break;
-         case RawFood.Potato: spriteRenderer.sprite = food.gs.assets.potatoRaw_Sprite; break;
+         case RawFood.Chicken: spriteRenderer.sprite = food.gs.assets.chickenRaw_Sprite; food.gameObject.name = "Raw Chicken"; food.rawFood = rawFood; break;
+         case RawFood.Potato: spriteRenderer.sprite = food.gs.assets.potatoRaw_Sprite; food.gameObject.name = "Raw Potato"; food.rawFood = rawFood; break;
          default: break;
       }
       return food;

@@ -129,6 +129,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4822950346246366283, guid: 5ccbb1fc92b35d24684e1b664cd3f199, type: 3}
   m_PrefabInstance: {fileID: 1622229714985443506}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &317971705
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 317971706}
+  m_Layer: 0
+  m_Name: Food Tray On Belt Container
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &317971706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 317971705}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1402637222}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,6 +329,10 @@ MonoBehaviour:
   pChar: {fileID: 0}
   trajectoryLine: {fileID: 0}
   hook: {fileID: 0}
+  status:
+    bIsDragging: 0
+    bProjectileRecastLocked: 0
+    dragStartPosition: {x: 0, y: 0, z: 0}
 --- !u!4 &526163868 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6266561958937502383, guid: 64df4b1abf5348748b967d353dc6643d, type: 3}
@@ -308,6 +343,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7309094407943368012, guid: 5ccbb1fc92b35d24684e1b664cd3f199, type: 3}
   m_PrefabInstance: {fileID: 1622229714985443506}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &718649745
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 718649746}
+  m_Layer: 0
+  m_Name: Conveyor Belt Container
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &718649746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 718649745}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1402637222}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &805521292
 GameObject:
   m_ObjectHideFlags: 0
@@ -344,25 +410,22 @@ MonoBehaviour:
     game_BGM: {fileID: 0}
     chickenRaw_Sprite: {fileID: 21300000, guid: ac46e192a67fa1641b966cdc1f77466c, type: 3}
     potatoRaw_Sprite: {fileID: 21300000, guid: 41924fa7766a56f47ab93d39c93d287d, type: 3}
-    conveyorSource_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    conveyorSegment_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   prefabs:
     foodTray_Prefab: {fileID: 8869386820917989431, guid: 46201822b03dd704fbd120f7ae1a4b1e, type: 3}
     trajectoryLine_Prefab: {fileID: 2456924802157857401, guid: ae25756080f80ff4e9aa92a45365b23b, type: 3}
     hook_Prefab: {fileID: 4769596760136872830, guid: 17eacd3f90082d640812b86571d24372, type: 3}
     food_Prefab: {fileID: 10608647553440907, guid: 8ee08cd454710664dbbdf3bb43a71e64, type: 3}
-    conveyorSegment_Prefab: {fileID: 2016328397459112910, guid: a6e04d48068b8b547bf57704560e8f96, type: 3}
-  conveyors:
+    conveyorBeltSegment_Prefab: {fileID: 2016328397459112910, guid: a6e04d48068b8b547bf57704560e8f96, type: 3}
+    foodSpawner_Prefab: {fileID: -2571226997691065726, guid: e9e1ae699776a4148b3d9d9ac175a5b8, type: 3}
+  conveyorSettings:
     segmentLength: 1
     width: 1
   mapTransform: {fileID: 1402637222}
   canvasTransform: {fileID: 1784029396}
+  conveyorBeltContainerTransform: {fileID: 718649746}
+  foodTrayOnBeltContainerTransform: {fileID: 317971706}
   bgmPlayer: {fileID: 805521295}
-  mixer: {fileID: 0}
-  fryer: {fileID: 0}
-  cutter: {fileID: 0}
-  conveyorController: {fileID: 0}
-  foodSpawner: {fileID: 0}
+  pendingProcessFoods: []
 --- !u!4 &805521294
 Transform:
   m_ObjectHideFlags: 0
@@ -630,7 +693,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1353255385
 RectTransform:
   m_ObjectHideFlags: 0
@@ -778,6 +841,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 317971706}
   - {fileID: 1994681781}
   - {fileID: 605771659}
   - {fileID: 526163868}
@@ -786,6 +850,7 @@ Transform:
   - {fileID: 1793575316}
   - {fileID: 410087041}
   - {fileID: 832575519}
+  - {fileID: 718649746}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1446556562
@@ -1783,6 +1848,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mixer
       objectReference: {fileID: 0}
+    - target: {fileID: 7441077505804373000, guid: 64df4b1abf5348748b967d353dc6643d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8726668684650494478, guid: 64df4b1abf5348748b967d353dc6643d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.12
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6450067231792938375, guid: 64df4b1abf5348748b967d353dc6643d, type: 3}
     m_RemovedGameObjects: []
@@ -1971,13 +2044,17 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 1446556562}
+    - target: {fileID: 1086183487001220629, guid: 689f228a531a9b945b3704b932692623, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6514614100909983536, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 1446556562}
     - target: {fileID: 6514614100909983536, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_VersionIndex
-      value: 110
+      value: 125
       objectReference: {fileID: 0}
     - target: {fileID: 7276143176135916521, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_Mesh
@@ -1985,6 +2062,14 @@ PrefabInstance:
       objectReference: {fileID: 1446556562}
     - target: {fileID: 8359901461110438262, guid: 689f228a531a9b945b3704b932692623, type: 3}
       propertyPath: m_Name
+      value: Cutter
+      objectReference: {fileID: 0}
+    - target: {fileID: 8359901461110438262, guid: 689f228a531a9b945b3704b932692623, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8359901461110438262, guid: 689f228a531a9b945b3704b932692623, type: 3}
+      propertyPath: m_TagString
       value: Cutter
       objectReference: {fileID: 0}
     m_RemovedComponents:
@@ -2001,6 +2086,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1402637222}
     m_Modifications:
+    - target: {fileID: 3253845749294984611, guid: 529b5e70febad574080105558b87864d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3837035434033313506, guid: 529b5e70febad574080105558b87864d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2041,9 +2130,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4360226859825573475, guid: 529b5e70febad574080105558b87864d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4478691749440507979, guid: 529b5e70febad574080105558b87864d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5668870970352461832, guid: 529b5e70febad574080105558b87864d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6653594380054177272, guid: 529b5e70febad574080105558b87864d, type: 3}
       propertyPath: m_Name
       value: Fryer
+      objectReference: {fileID: 0}
+    - target: {fileID: 6653594380054177272, guid: 529b5e70febad574080105558b87864d, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2078429004582511454, guid: 529b5e70febad574080105558b87864d, type: 3}

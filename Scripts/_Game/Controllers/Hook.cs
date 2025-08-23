@@ -1,65 +1,51 @@
 using UnityEngine;
+using _ = GameInstance;
 public class Hook : Actor_Game{
+
+   [ReadOnly] public GameState_Game gs;
+   [ReadOnly] public PlayerController_Game pc;
+   [ReadOnly] public PlayerCharacter_Game pChar;
+
    public static Hook CreateHook(Hook prefab, Transform parentTransform){
-      return Instantiate(prefab, parentTransform);
+      var hook = Instantiate(prefab, parentTransform);
+      hook.gameObject.name = prefab.gameObject.name;
+      return hook;
    }
-   public Transform objectContainer; // 玩家的 ObjectContainer
-   private PlayerController_Game playerMovement;
 
-   // void Start()
-   // {
-   //    playerMovement = GetComponentInParent<PlayerController_Game>();
-   //    if (playerMovement == null)
-   //    {
-   //          playerMovement = FindObjectOfType<PlayerController_Game>();
-   //    }
-   // }
+   void Awake(){
+      gs = _.gs as GameState_Game;
+      pc = _.pc as PlayerController_Game;
+      pChar = _.pChar_Game;
+   }
 
-   // void OnCollisionEnter(Collision collision)
-   // {
-   //    if (collision.gameObject.CompareTag("Food"))
-   //    {
-   //       Food food = collision.gameObject.GetComponent<Food>();
-   //       if (food != null)
-   //       {
-   //          Machine machine = null;
-   //          if (food.transform.parent != null)
-   //          {
-   //             machine = food.transform.parent.GetComponentInParent<Machine>();
-   //          }
+   void OnCollisionEnter(Collision collision){
+      var go = collision.gameObject;
+      if(!go.CompareTag("Food")) return;
+      Debug.Log("Hook: The collision hit object is a Food.");
 
-   //          if (machine != null)
-   //          {
-   //             int slotIndex = -1;
-   //             for (int i = 0; i < machine.slotPositions.Length; i++)
-   //             {
-   //                   if (machine.slotPositions[i] == food.transform.parent)
-   //                   {
-   //                      slotIndex = i;
-   //                      break;
-   //                   }
-   //             }
-   //             if (slotIndex >= 0)
-   //             {
-   //                   machine.RemoveFood(slotIndex);
-   //             }
-   //          }
+      var foodTray = go.GetComponent<FoodTray>();
+      if(!foodTray) { Debug.Log("Hook: The collision hit object is not a FoodTray."); return; }
+      Debug.Log("Hook: The collision hit object is a FoodTray.");
 
-   //          Destroy(food.GetComponent<FoodTray>());
-   //          Rigidbody foodRb = food.GetComponent<Rigidbody>();
-   //          if (foodRb != null)
-   //          {
-   //             foodRb.isKinematic = true;
-   //             foodRb.useGravity = false;
-   //             foodRb.linearVelocity = Vector3.zero;
-   //             foodRb.angularVelocity = Vector3.zero;
-   //          }
-   //          food.transform.SetParent(objectContainer);
-   //          food.transform.localPosition = Vector3.zero;
-   //          //food.HideProgress();
-   //          Debug.Log("Food hooked back to ObjectContainer!");
-   //          playerMovement.ResetHook();
-   //       }
-   //    }
-   // }
+      foodTray.transform.SetParent(pChar.slotTransform);
+      foodTray.gameObject.transform.localPosition = Vector3.zero;
+      foodTray.rb.isKinematic = true;
+      foodTray.rb.useGravity = false;
+
+      this.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
+      this.ResetRigidbody();
+      pc.status.bProjectileRecastLocked = false;
+   }
+
+   public void ReattachHookContainer_ResetTransform(Transform containerTransform){
+      this.transform.SetParent(containerTransform);
+      this.transform.localPosition = Vector3.zero;
+      this.transform.localRotation = Quaternion.identity;      
+   }
+
+   public void ResetRigidbody(){
+      var rb = this.GetComponent<Rigidbody>();
+      rb.isKinematic = true;
+      rb.useGravity = false;
+   }
 }

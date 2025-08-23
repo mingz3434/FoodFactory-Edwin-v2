@@ -8,35 +8,36 @@ using _ = GameInstance;
 
 [AddComponentMenu("Variables/Game State Game")]
 public class GameState_Game : GameState{
-   [Serializable] public struct Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite; public Sprite potatoRaw_Sprite; public Mesh conveyorSource_Mesh; public Mesh conveyorSegment_Mesh; }
-   [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorSegment conveyorSegment_Prefab; }
+   [Serializable] public struct Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite; public Sprite potatoRaw_Sprite; }
+   [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; }
    [Serializable] public struct ConveyorSettings { public float segmentLength, width; }
 
 
-   // 2: Spline Container
+   // Spline Container
    public SplineContainer splineContainer;
    [ReadOnly]public Vector3 splineCenter;
 
-   // 0: Assetssss
+   // Assetssss
    public Assets assets; public Prefabs prefabs;
-   public ConveyorSettings conveyors = new ConveyorSettings() { segmentLength = 1, width = 1 };
+   public ConveyorSettings conveyorSettings = new ConveyorSettings() { segmentLength = 1, width = 1 };
 
-   // 1: Transformssss
-   
+   // Transformssss
    public Transform mapTransform;
    public Transform canvasTransform;
+   public Transform conveyorBeltContainerTransform;
+   public Transform foodTrayOnBeltContainerTransform;
 
-
-
-   // 3: BGM Player
+   // BGM Player
    public AudioSource bgmPlayer;
 
-   // 4: Machines in Scene
-   public GameObject mixer;
-   public GameObject fryer;
-   public GameObject cutter;
-   public GameObject conveyorController;
-   public GameObject foodSpawner;
+
+   public List<FoodTray> pendingProcessFoods;
+
+   // Machines in Scene
+   //! 儘可能唔好use global machine, as they are supposed to handle all their own stuffs by their own.
+   // ...
+   // ...
+   // ...
    
 
    void Awake(){ _.gs = this; }
@@ -44,7 +45,7 @@ public class GameState_Game : GameState{
 
    void Start(){
       GenerateConveyors();
-      FoodTray.CreateFoodTray(this.prefabs.foodTray_Prefab, this.mapTransform);
+      RegularSpawnFood();
    }
    public void StartGame(){
       this.bgmPlayer.clip = this.assets.game_BGM;
@@ -55,29 +56,28 @@ public class GameState_Game : GameState{
 
    void GenerateConveyors(){
       var spline = this.splineContainer.Spline;
-      var segmentCount = Mathf.CeilToInt(spline.GetLength() / conveyors.segmentLength);
+      var segmentCount = Mathf.CeilToInt(spline.GetLength() / this.conveyorSettings.segmentLength);
       for (int i = 0; i < segmentCount; i++){
-         var portionValue = i * conveyors.segmentLength / spline.GetLength();
+         var portionValue = i * this.conveyorSettings.segmentLength / spline.GetLength();
          var position = spline.EvaluatePosition(portionValue); position.y += .5f; var tangent = spline.EvaluateTangent(portionValue); var up = spline.EvaluateUpVector(portionValue);
-         
-         var cs = ConveyorSegment.CreateConveyorSegment(this.prefabs.conveyorSegment_Prefab, this.mapTransform, i);
-         cs.transform.position = position;
-         cs.transform.rotation = Quaternion.LookRotation(tangent, up);
+         var rotation = Quaternion.LookRotation(tangent, up);
+         var trackRotation = rotation * Quaternion.Euler(90, 0, 0);
 
          if(i==0){
-            cs.transform.localScale = new Vector3(1,2,1);
-            var filter = cs.GetComponent<MeshFilter>();
-            filter.mesh = this.assets.conveyorSource_Mesh;
+            var foodSpawner = FoodSpawner.CreateFoodSpawner(this.prefabs.foodSpawner_Prefab, this.conveyorBeltContainerTransform, position, rotation);
          }
          else{
-            cs.transform.localScale = new Vector3(1,1,1);
-            cs.transform.Rotate(90,0,0,Space.Self);
-            var filter = cs.GetComponent<MeshFilter>();
-            filter.mesh = this.assets.conveyorSegment_Mesh;
+            var conveyorBeltSegment = ConveyorBeltSegment.CreateConveyorBeltSegment(this.prefabs.conveyorBeltSegment_Prefab, this.conveyorBeltContainerTransform, position, trackRotation, i-1);
          }
 
       }
    }
    
-
+   void RegularSpawnFood(){
+      Timer.CreateTimer(this.gameObject, 1.5f, () => {
+         var foodTray = FoodTray.CreateFoodTray(this.prefabs.foodTray_Prefab, this.foodTrayOnBeltContainerTransform);
+         RegularSpawnFood();
+      });
+      
+   }
 }

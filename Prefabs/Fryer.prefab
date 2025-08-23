@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1084631801430883851}
   m_Layer: 0
-  m_Name: Container (1)
+  m_Name: Slot_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 44508950912565244}
   m_Layer: 0
-  m_Name: Container (3)
+  m_Name: Slot_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -72,7 +72,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5959732176489752366}
   m_Layer: 0
-  m_Name: Container (2)
+  m_Name: Slot_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -103,7 +103,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8082176673486247051}
   m_Layer: 0
-  m_Name: Container
+  m_Name: Slot_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -136,9 +136,10 @@ GameObject:
   - component: {fileID: 4186760304238017294}
   - component: {fileID: 4593348478538229865}
   - component: {fileID: 2362725138735452834}
+  - component: {fileID: 563265061777658968}
   m_Layer: 0
   m_Name: Fryer
-  m_TagString: Machine
+  m_TagString: Fryer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -236,3 +237,15 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &563265061777658968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6653594380054177272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9455fe9b32e90584fbe51a6e383b6cf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

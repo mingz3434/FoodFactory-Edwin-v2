@@ -15,10 +15,10 @@ public class PlayerController_Game : PlayerController{
 
    [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
 
-   [Serializable] public struct Status{ public bool bIsDragging; public bool bHookHasLaunched; public Vector3 dragStartPosition; }
+   [Serializable] public struct Status{ public bool bIsDragging; public bool bProjectileRecastLocked; public Vector3 dragStartPosition; }
 
    TrajectorySettings trajs = new TrajectorySettings(){ maxDragDistance = 2f, launchPower = 10f, upwardAngle = 45f, maxAngle = 45f };
-   Status status;
+   public Status status;
 
    void Awake() { _.pc = this; }
    void Start() {
@@ -104,42 +104,23 @@ public class PlayerController_Game : PlayerController{
       //P: Return when null.
       if(hit.collider == null) {Debug.Log("PC: PickUpFood: No hit collider."); return; }
 
-      //P: If it's food, destroy it's conveyor mover comp, then set its rb to desired state.
+      //P: If it's food, no more move.
       if (hit.collider.CompareTag("Food")){
-         var foodContainer_GO = hit.collider.gameObject;
-         
-         foodContainer_GO.transform.SetParent(pChar.slotTransform);
-         foodContainer_GO.transform.localPosition = Vector3.zero;
-         Debug.Log("Food placed in ObjectContainer!");
+         var foodTray = hit.collider.gameObject.GetComponent<FoodTray>();
+         foodTray.SnapTo(pChar.slotTransform, false);
+         foodTray.bInTrack = false; // !!!!!!
+         Debug.Log("Food placed in Player's Food Slot!");
       }
       
    }
 
    void MachineInteractionLogics(){
-      // Machine[] allMachines = FindObjectsOfType<Machine>();
-      // foreach (Machine machine in allMachines){
 
-      //    //! Case: Mixer
-      //    if (machine.type == Machine.MachineType.Mixer){
-      //       if (machine.needsInput) { machine.StopMixer(); }
-      //       else{ // 運作期間按 E，銷毀食物
-      //          for (int i = machine.slotPositions.Length - 1; i >= 0; i--){
-      //             Food food = machine.GetFoodAtSlot(i);
-      //             if (food != null){
-      //                Destroy(food.gameObject);
-      //                machine.RemoveFood(i);
-      //                Debug.Log("Mixer: Food destroyed during processing.");
-      //             }
-      //          }
-      //       }
-      //    }
-
-      // }
    }
 
 
    void EnableTrajectory_StartDragging(){
-      if (this.status.bHookHasLaunched) return; // Hook 未返回時禁止拉動
+      if (this.status.bProjectileRecastLocked) return; // !!!!!!!!!!!!!!
       this.status.bIsDragging = true;
       this.status.dragStartPosition = Input.mousePosition; Debug.Log(Input.mousePosition);
       this.trajectoryLine.lineRenderer.enabled = true;
@@ -148,6 +129,9 @@ public class PlayerController_Game : PlayerController{
 
 
    void TrajectoryLogics(){ //P: Including release mouse button logics
+
+      //// prefer become pointing back to real method cuz here is inside the update
+      //// but now will not do it cuz for better managing.
 
       Action<Vector3, Vector3> updateDrawTrajectoryLine_LineRenderer = (startPos, velocityCombined) => {
          var points = new Vector3[50];
@@ -158,86 +142,77 @@ public class PlayerController_Game : PlayerController{
          this.trajectoryLine.lineRenderer.SetPositions(points);
       };
 
-      var velocityCombined = GetVelocity_Combined_ByCalculating_DragDistance();
+      var velocityCombined = GetVelocityCombined_By_Calculating_DragDistance();
 
       updateDrawTrajectoryLine_LineRenderer( GetFiringStartPosition(), velocityCombined );
 
       //P: If release mouse left btn, fire.
       if (Input.GetMouseButtonUp(0)){
          this.status.bIsDragging = false;
-         this.trajectoryLine.lineRenderer.enabled = false;
+         this.trajectoryLine.lineRenderer.enabled = false; // hide trajectory line
          FireProjectile(velocityCombined);
       }
    }
 
 
    void FireProjectile(Vector3 velocity){
-      if (pChar.slotTransform.childCount > 0){
+
+      // Fire first food when having food on hand.
+      if (pChar.slotTransform.childCount > 0 ){
+         this.status.bProjectileRecastLocked = true;
          var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
          var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
+         Timer.CreateTimer(this.gameObject, 3f, () => this.status.bProjectileRecastLocked = false );
       }
-      else if (this.hook.transform != null && !this.status.bHookHasLaunched){
-         var hook = this.hook.gameObject; hook.transform.SetParent(null); this.status.bHookHasLaunched = true;
+
+      // Fire a hook for getting something back.
+      else{
+         var hook = this.hook.gameObject; hook.transform.SetParent(null); this.status.bProjectileRecastLocked = true;
          var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
-         Timer.CreateTimer(hook.gameObject, 3f, () => ResetHook() );
-      }
-   }
-
-   public void ResetHook(){
-      if (this.hook.transform == null || pChar.hookContainerTransform == null) return;
-
-      this.status.bHookHasLaunched = false;
-      this.hook.transform.SetParent(pChar.hookContainerTransform);
-      this.hook.transform.localPosition = Vector3.zero;
-      this.hook.transform.localRotation = Quaternion.identity;
-      var hookRb = this.hook.GetComponent<Rigidbody>();
-      if (hookRb){
-         if(hookRb.useGravity) hookRb.useGravity = false;
-         if(!hookRb.isKinematic) hookRb.isKinematic = true;
-         hookRb.linearVelocity = Vector3.zero;
-         hookRb.angularVelocity = Vector3.zero;
+         Timer.CreateTimer(this.gameObject, 3f, () => {
+            this.status.bProjectileRecastLocked = false;
+            this.hook.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
+            this.hook.ResetRigidbody();
+         });
       }
    }
 
 
 
 
-
-
-
-
+   // ! Complex math getters
 
    Vector3 GetFiringStartPosition(){
       return pChar.slotTransform.childCount > 0 ? pChar.slotTransform.position : pChar.hookContainerTransform.position;
    }
 
-   Vector3 GetVelocity_Combined_ByCalculating_DragDistance(){
+   Vector3 GetVelocityCombined_By_Calculating_DragDistance(){
       //* Remarks: Here only calculating input delta, no lineRenderer involved.
       //P: Get world fly direction first.
       var delta = Input.mousePosition - this.status.dragStartPosition;
       var dragDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
-      var flyDirection = -delta.normalized;
+      var desiredDirection = -delta.normalized;
 
       var playerForward = pChar.transform.forward; //!!!
       var playerRight = pChar.transform.right; //!!!
       var inputForward = new Vector3(playerForward.x, 0, playerForward.z).normalized;
       var inputRight   = new Vector3(playerRight.x, 0, playerRight.z).normalized;
 
-      var worldFlyDirection = (flyDirection.y * inputForward + flyDirection.x * inputRight).normalized;
-
+      // direction + input magnitude, not the real physics term of force.
+      var rawFlyingForce_xComp = (desiredDirection.y * inputForward + desiredDirection.x * inputRight).normalized;
 
       //P: Limit fly direction within -45 to +45 degree.
-      var angle = Vector3.SignedAngle(worldFlyDirection, inputForward, Vector3.up);
+      var angle = Vector3.SignedAngle(rawFlyingForce_xComp, inputForward, Vector3.up);
 
       if (Mathf.Abs(angle) > 45){
          var clampedAngle = Mathf.Sign(angle) * 45;
-         worldFlyDirection = Quaternion.Euler(0, clampedAngle, 0) * inputForward;
+         rawFlyingForce_xComp = Quaternion.Euler(0, clampedAngle, 0) * inputForward;
       }
 
       //P: Calculate initial xComp velocity
-      var velocity_xComponent = worldFlyDirection * dragDistance * this.trajs.launchPower;
+      var velocity_xComponent = rawFlyingForce_xComp * dragDistance * this.trajs.launchPower;
 
       //P: Add yComp(height) and become vector combined
       var radian = this.trajs.upwardAngle * Mathf.Deg2Rad;
