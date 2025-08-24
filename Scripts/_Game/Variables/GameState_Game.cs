@@ -12,7 +12,6 @@ public class GameState_Game : GameState{
    [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; }
    [Serializable] public struct ConveyorSettings { public float segmentLength, width; }
 
-
    // Spline Container
    public SplineContainer splineContainer;
    [ReadOnly] public Vector3 splineCenter;
@@ -32,7 +31,7 @@ public class GameState_Game : GameState{
 
 
    // Orders
-   public List<Order> orders = new List<Order>();
+   // public List<Order> orders = new List<Order>();
    public int remainingTime = 300;
 
    // Machines in Scene

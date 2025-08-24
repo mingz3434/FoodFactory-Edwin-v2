@@ -3,6 +3,7 @@ using UnityEngine.Splines;
 using _ = GameInstance;
 using Unity.Mathematics;
 using UnityEngine.UI;
+using TMPro;
 
 public class FoodTray : Actor_Game {
    [ReadOnly] public GameState_Game gs;
@@ -10,6 +11,7 @@ public class FoodTray : Actor_Game {
 
    public GameObject canvas_GO;
    public Slider slider;
+   public TMP_Text exclamationMark_Text;
    public float portionValue;
    public float speed = 5f;
    public bool bPerserveMomentum = true;
@@ -26,7 +28,7 @@ public class FoodTray : Actor_Game {
       
       System.Random r = new System.Random();
       int n = r.Next(0,2);
-      tray.food = Food.CreateFood(tray.gs.prefabs.food_Prefab, tray.transform, (Food.RawFood)n );
+      tray.food = Food.CreateFood(tray, tray.gs.prefabs.food_Prefab, tray.transform, (Food.RawFood)n );
 
       var suffix = n == 0 ? "Chicken" : "Potato";
       tray.gameObject.name = "FoodTray : " + suffix;
@@ -56,14 +58,17 @@ public class FoodTray : Actor_Game {
    void Update(){
       if(!canvas_GO.activeSelf) return;
       var pCharPosition = _.pChar_Game.transform.position;
-      Vector3 v = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
-      canvas_GO.transform.rotation = Quaternion.LookRotation(v) * Quaternion.Euler(0, 180, 0);
+      var pCharPosition_SameHeight = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
+      var direction = pCharPosition_SameHeight - canvas_GO.transform.position;
+
+      var targetRotationInEuler = (Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180, 0)).eulerAngles;
+      canvas_GO.transform.rotation = Quaternion.Euler(0, targetRotationInEuler.y, 0);
    }
 
    void OnCollisionEnter(Collision collision){
       var go = collision.gameObject;
       if (!food) return; //!!!!!!!!!!!
-      if (go.CompareTag("Mixer")) { var mixer = go.GetComponent<Mixer>(); if(!mixer) return; OnCollidedWith_Mixer(mixer); PopFillBar_and_Run(); };
+      if (go.CompareTag("Mixer")) { var mixer = go.GetComponent<Mixer>(); if(!mixer) return; OnCollidedWith_Mixer(mixer); };
       if (go.CompareTag("Fryer")) { var fryer = go.GetComponent<Fryer>(); if (!fryer) return; OnCollidedWith_Fryer(fryer); }
       if (go.CompareTag("Cutter")) { var cutter = go.GetComponent<Cutter>(); if (!cutter) return; OnCollidedWith_Cutter(cutter); }
    }
@@ -74,7 +79,7 @@ public class FoodTray : Actor_Game {
       var slot = mixer.slot;
       if (slot.transform.childCount == 0) {
          Debug.Log("FoodTray: Slot available, attaching the food tray to the mixer...");
-         FM_Comparators.Compare(this, this.food, mixer);
+         FM_Comparators.Compare(this.food, mixer);
       }
       else { Debug.Log("FoodTray: Slot used!"); }
    }
@@ -82,15 +87,17 @@ public class FoodTray : Actor_Game {
    void OnCollidedWith_Fryer(Fryer fryer){
       var slots = fryer.slots;
       bool bAvailable = false;
+      int availableSlotId = -1;
       for (int i = 0; i < slots.Length; i++) {
          if (slots[i].transform.childCount == 0) {
             bAvailable = true;
+            availableSlotId = i;
             break;
          }
       }
       if (bAvailable) {
          Debug.Log("FoodTray: Slot available, attaching the food tray to the fryer...");
-         FM_Comparators.Compare(this, this.food, fryer);
+         FM_Comparators.Compare(this.food, fryer, availableSlotId);
       }
    }
 
@@ -98,7 +105,7 @@ public class FoodTray : Actor_Game {
       var slot = cutter.slot;
       if (slot.transform.childCount == 0) {
          Debug.Log("FoodTray: Slot available, attaching the food tray to the cutter...");
-         FM_Comparators.Compare(this, this.food, cutter);
+         FM_Comparators.Compare(this.food, cutter);
       }
    }
 
@@ -117,7 +124,7 @@ public class FoodTray : Actor_Game {
    }
 
    public void AddPendingFoodToGameState(){
-      gs.pendingProcessFoods.Add(this);
+      // gs.pendingProcessFoods.Add(this);
    }
 
    public void BounceBack(){

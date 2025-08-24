@@ -2,78 +2,33 @@ using UnityEngine;
 using _ = GameInstance;
 
 public static class FM_Comparators{
-   public static void Compare(FoodTray tray, Food food, Machine machine){
+   // Comparators for checking, less likely to do real stuffs.
 
-      if(food.rawFood == Food.RawFood.Chicken){
-         Chicken_vs_Machine(tray, food, machine);
-      }
-
-      if(food.rawFood == Food.RawFood.Potato){
-         Potato_vs_Machine(tray, food, machine);
-      }
-
+   //P: 用原型食物做第一步篩選
+   public static void Compare(Food food, Machine machine, int availableSlotId = -1){
+      if(food.rawFood == Food.RawFood.Chicken){ Chicken_vs_Machine_Check(food, machine, availableSlotId); }
+      if(food.rawFood == Food.RawFood.Potato){ Potato_vs_Machine_Check(food, machine, availableSlotId); }
    }
 
-   public static void Chicken_vs_Machine(FoodTray tray, Food chicken, Machine machine){
-      //P: should use productName as key.
+   //P: Should use productName as key.
+   public static void Chicken_vs_Machine_Check(Food chicken, Machine machine, int availableSlotId = 0){
+      var tray = chicken.tray;
       var sr = chicken.GetComponent<SpriteRenderer>();
+      var assets = (_.gs as GameState_Game).assets;
 
-      if(chicken.productName == "Raw Chicken" && machine is Mixer mixer){
-         tray.SnapTo(mixer.slot.transform);
-         Debug.Log("Stirred Chicken!");
-         chicken.productName = "Seasoned Chicken";
-         sr.sprite = (_.gs as GameState_Game).assets.chickenStirred_Sprite;
-      }
-
-      if(chicken.productName == "Raw Chicken" && machine is Fryer fryer){
-         tray.SnapTo(fryer.slots[0].transform);
-         Debug.Log("Fried Big Chicken!");
-         chicken.productName = "Fried Chicken";
-         sr.sprite = (_.gs as GameState_Game).assets.chickenFried_Sprite;
-      }
-
-      if(chicken.productName == "Raw Chicken" && machine is Cutter cutter){
-         tray.SnapTo(cutter.slot.transform);
-         Debug.Log("Sliced Chicken!");
-         chicken.productName = "Sliced Chicken";
-         sr.sprite = (_.gs as GameState_Game).assets.chickenSliced_Sprite;
-      }
-
-      if(chicken.productName == "Sliced Chicken" && machine is Fryer fryer_){
-         tray.SnapTo(fryer_.slots[0].transform);
-         Debug.Log("Fried Nuggets!");
-         chicken.productName = "Fried Chicken Nuggets";
-         sr.sprite = (_.gs as GameState_Game).assets.nugget_Sprite;
-      }
-
+      if(chicken.productName == "Raw Chicken" && machine is Mixer mixer){ mixer.Stir(chicken, "Stirred Chicken", assets.chickenStirred_Sprite); }
+      if(chicken.productName == "Raw Chicken" && machine is Fryer fryer){ fryer.Fry(chicken, "Fried Chicken", assets.chickenFried_Sprite, availableSlotId); }
+      if(chicken.productName == "Raw Chicken" && machine is Cutter cutter){ cutter.Slice(chicken, "Sliced Chicken", assets.chickenSliced_Sprite); }
+      if(chicken.productName == "Sliced Chicken" && machine is Fryer fryer_){ fryer_.Fry(chicken, "Chicken Nuggets", assets.nugget_Sprite, availableSlotId); }
    }
 
-   public static void Potato_vs_Machine(FoodTray tray, Food potato, Machine machine){
+   public static void Potato_vs_Machine_Check(Food potato, Machine machine, int availableSlotId){
+      var tray = potato.tray;
       var sr = potato.GetComponent<SpriteRenderer>();
+      var assets = (_.gs as GameState_Game).assets;
 
-      if(potato.productName == "Raw Potato" && machine is Cutter cutter){
-         tray.SnapTo(cutter.slot.transform);
-         Debug.Log("Sliced Potato!");
-         potato.productName = "Sliced Potato";
-         sr.sprite = (_.gs as GameState_Game).assets.potatoSliced_Sprite;
-      }
-
-      if(potato.productName == "Raw Potato" && machine is Fryer fryer){
-         tray.SnapTo(fryer.slots[0].transform);
-         Debug.Log("Fried Potato Wedges!");
-         potato.productName = "Fried Potato Wedges";
-         sr.sprite = (_.gs as GameState_Game).assets.potatoFried_Sprite;
-      }
-
-      if(potato.productName == "Sliced Pototo" && machine is Fryer fryer_){
-         tray.SnapTo(fryer_.slots[0].transform);
-         Debug.Log("Fried Chips!");
-         potato.productName = "Fried Potato Chips";
-         sr.sprite = (_.gs as GameState_Game).assets.potatoFried_Sprite;
-      }
+      if(potato.productName == "Raw Potato" && machine is Cutter cutter){ cutter.Slice(potato, "Sliced Potato", assets.potatoSliced_Sprite); }
+      if(potato.productName == "Raw Potato" && machine is Fryer fryer){ fryer.Fry(potato, "Fried Potato", assets.potatoFried_Sprite, availableSlotId); }
+      if(potato.productName == "Sliced Potato" && machine is Fryer fryer_){ fryer_.Fry(potato, "Fried Potato Wedges", assets.potatoFried_Sprite, availableSlotId); }
    }
-}
-
-public static class FM_Consequences{
-   // public static void Chicken
 }

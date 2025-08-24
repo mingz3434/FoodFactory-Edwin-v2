@@ -3,6 +3,7 @@ using _ = GameInstance;
 
 public class Food : Actor_Game{
 
+   [ReadOnly] public FoodTray tray;
    [ReadOnly] GameState_Game gs;
 
    public enum RawFood{ Chicken, Potato }
@@ -12,8 +13,9 @@ public class Food : Actor_Game{
 
 
 
-   public static Food CreateFood(Food prefab, Transform parentTransform, RawFood rawFood){
+   public static Food CreateFood(FoodTray tray, Food prefab, Transform parentTransform, RawFood rawFood){
       var food = Instantiate(prefab, parentTransform);
+      food.tray = tray;
       food.gs = _.gs as GameState_Game;
       var spriteRenderer = food.GetComponent<SpriteRenderer>();
       switch(rawFood){
