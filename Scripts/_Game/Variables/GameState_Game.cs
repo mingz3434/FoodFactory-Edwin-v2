@@ -20,7 +20,7 @@ public class GameState_Game : GameState{
    public Assets assets; public Prefabs prefabs;
    public ConveyorSettings conveyorSettings = new ConveyorSettings() { segmentLength = 1, width = 1 };
 
-   // Transformssss
+   // Transforms
    public Transform mapTransform;
    public Transform canvasTransform;
    public Transform conveyorBeltContainerTransform;
