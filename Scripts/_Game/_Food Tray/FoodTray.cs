@@ -60,6 +60,7 @@ public class FoodTray : Actor_Game {
       var pCharPosition = _.pChar_Game.transform.position;
       var pCharPosition_SameHeight = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
       var direction = pCharPosition_SameHeight - canvas_GO.transform.position;
+      if(direction.magnitude == 0f) return;
 
       var targetRotationInEuler = (Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180, 0)).eulerAngles;
       canvas_GO.transform.rotation = Quaternion.Euler(0, targetRotationInEuler.y, 0);
