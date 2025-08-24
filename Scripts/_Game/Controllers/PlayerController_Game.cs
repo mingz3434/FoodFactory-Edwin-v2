@@ -156,7 +156,7 @@ public class PlayerController_Game : PlayerController{
          var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
          var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
-         Timer.CreateTimer(this.gameObject, 3f, () => this.status.bProjectileRecastLocked = false );
+         Timer.CreateTimer_Physics(this.gameObject, 3f, () => this.status.bProjectileRecastLocked = false );
       }
 
       // Fire a hook for getting something back.
@@ -164,7 +164,7 @@ public class PlayerController_Game : PlayerController{
          var hook = this.hook.gameObject; hook.transform.SetParent(null); this.status.bProjectileRecastLocked = true;
          var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
          rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
-         Timer.CreateTimer(this.gameObject, 3f, () => {
+         Timer.CreateTimer_Physics(this.gameObject, 3f, () => {
             this.status.bProjectileRecastLocked = false;
             this.hook.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
             this.hook.ResetRigidbody();

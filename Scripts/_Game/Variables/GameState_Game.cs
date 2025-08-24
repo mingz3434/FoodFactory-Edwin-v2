@@ -75,7 +75,7 @@ public class GameState_Game : GameState{
    }
    
    void RegularSpawnFood(){
-      Timer.CreateTimer(this.gameObject, 1.5f, () => {
+      Timer.CreateTimer_Physics(this.gameObject, 1.5f, () => {
          var foodTray = FoodTray.CreateFoodTray(this.prefabs.foodTray_Prefab, this.foodTrayOnBeltContainerTransform);
          RegularSpawnFood();
       });

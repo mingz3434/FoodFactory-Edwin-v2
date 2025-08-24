@@ -4,21 +4,43 @@ using UnityEngine;
 
 public class Timer : MonoBehaviour{
 
-   public static Timer CreateTimer(GameObject creator, float waitDuration, Action onFinished){
+   public static Timer CreateTimer_Physics(GameObject creator, float waitDuration, Action onFinished){
       var timer = creator.AddComponent<Timer>();
-      timer.StartTimer(waitDuration, onFinished);
+      timer.StartTimer_Physics(waitDuration, onFinished);
       return timer;
    }
 
-   public void StartTimer(float waitDuration, Action onFinished){
-      StartCoroutine(TimerCoroutine(waitDuration, onFinished));
+   public void StartTimer_Physics(float waitDuration, Action onFinished){
+      StartCoroutine(TimerCoroutine_Physics(waitDuration, onFinished));
    }
 
-   private IEnumerator TimerCoroutine(float waitDuration, Action onFinished){
+   private IEnumerator TimerCoroutine_Physics(float waitDuration, Action onFinished){
       float elapsedTime = 0f;
       while (elapsedTime < waitDuration){
          elapsedTime += Time.fixedDeltaTime;
          yield return new WaitForFixedUpdate();
+      }
+      onFinished?.Invoke();
+      Destroy(this);
+   }
+
+   // ************************************************
+
+      public static Timer CreateTimer_NoPhysics(GameObject creator, float waitDuration, Action onFinished){
+      var timer = creator.AddComponent<Timer>();
+      timer.StartTimer_NoPhysics(waitDuration, onFinished);
+      return timer;
+   }
+
+   public void StartTimer_NoPhysics(float waitDuration, Action onFinished){
+      StartCoroutine(TimerCoroutine_NoPhysics(waitDuration, onFinished));
+   }
+
+   private IEnumerator TimerCoroutine_NoPhysics(float waitDuration, Action onFinished){
+      float elapsedTime = 0f;
+      while (elapsedTime < waitDuration){
+         elapsedTime += Time.deltaTime;
+         yield return null;
       }
       onFinished?.Invoke();
       Destroy(this);
