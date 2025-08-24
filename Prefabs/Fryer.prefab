@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1084631801430883851}
   m_Layer: 0
-  m_Name: Slot_1
+  m_Name: Container (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 44508950912565244}
   m_Layer: 0
-  m_Name: Slot_3
+  m_Name: Container (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -72,7 +72,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5959732176489752366}
   m_Layer: 0
-  m_Name: Slot_2
+  m_Name: Container (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -103,7 +103,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8082176673486247051}
   m_Layer: 0
-  m_Name: Slot_0
+  m_Name: Container
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -136,10 +136,10 @@ GameObject:
   - component: {fileID: 4186760304238017294}
   - component: {fileID: 4593348478538229865}
   - component: {fileID: 2362725138735452834}
-  - component: {fileID: 563265061777658968}
+  - component: {fileID: 2078429004582511454}
   m_Layer: 0
   m_Name: Fryer
-  m_TagString: Fryer
+  m_TagString: Machine
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -179,7 +179,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6653594380054177272}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -237,7 +237,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &563265061777658968
+--- !u!114 &2078429004582511454
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -246,11 +246,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 6653594380054177272}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9455fe9b32e90584fbe51a6e383b6cf8, type: 3}
+  m_Script: {fileID: 11500000, guid: 59e7382a853c439469cc895392f85e75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots:
-  - {fileID: 5668870970352461832}
-  - {fileID: 3253845749294984611}
-  - {fileID: 4478691749440507979}
-  - {fileID: 4360226859825573475}
+  type: 2
+  recipes:
+  - {fileID: 11400000, guid: 4e8db36fa65d2674ca36a7ff0707eeaa, type: 2}
+  - {fileID: 11400000, guid: 875bf41b493587e46a6c445516e88eab, type: 2}
+  - {fileID: 11400000, guid: 7cfd73ab009b6ef49a9d60dcd2fb57e6, type: 2}
+  - {fileID: 11400000, guid: 7ec189b81993b804b9234fb77143d4eb, type: 2}
+  - {fileID: 11400000, guid: 735897bd62fc43040b074f41c1614de0, type: 2}
+  - {fileID: 11400000, guid: b4ae7760ba25c0146b1fc8f45911f728, type: 2}
+  maxSlots: 4
+  slotPositions:
+  - {fileID: 8082176673486247051}
+  - {fileID: 44508950912565244}
+  - {fileID: 5959732176489752366}
+  - {fileID: 1084631801430883851}
+  foodData: {fileID: 11400000, guid: 306cb86202e2daf4a865d211198ed61d, type: 2}
+  needsInput: 0
