@@ -117,16 +117,6 @@ public class FoodTray : Actor_Game {
       rb.useGravity = false;
    }
 
-   public void PopFillBar_and_Run(){
-      this.canvas_GO.SetActive(true);
-      BarFiller.CreateBarFiller_Loading(this.transform, this.slider, 3f, () => { Debug.Log("Ding!"); });
-      //! add tick image, yellow exclamation, red exclamation.
-   }
-
-   public void AddPendingFoodToGameState(){
-      // gs.pendingProcessFoods.Add(this);
-   }
-
    public void BounceBack(){
       this.SnapTo(_.pChar_Game.slotTransform);
    }

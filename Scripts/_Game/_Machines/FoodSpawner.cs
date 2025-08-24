@@ -8,4 +8,5 @@ public class FoodSpawner : Machine{
       return fs;
    }
 
+   //* The responsibility has sent to be done at "ConveyorBeltSegment".
 }

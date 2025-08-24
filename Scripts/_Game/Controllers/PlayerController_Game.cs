@@ -83,8 +83,6 @@ public class PlayerController_Game : PlayerController{
    void Update(){
       if (Input.GetKeyDown(KeyCode.Space)) { PickUpFoodLogics(); }
 
-      if (Input.GetKeyDown(KeyCode.E)) { MachineInteractionLogics(); }
-
       if (Input.GetMouseButtonDown(0)) { EnableTrajectory_StartDragging(); }
 
       if (this.status.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
@@ -113,11 +111,6 @@ public class PlayerController_Game : PlayerController{
       }
       
    }
-
-   void MachineInteractionLogics(){
-
-   }
-
 
    void EnableTrajectory_StartDragging(){
       if (this.status.bProjectileRecastLocked) return; // !!!!!!!!!!!!!!
