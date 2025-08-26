@@ -20,6 +20,8 @@ public class PlayerController_Game : PlayerController{
    TrajectorySettings trajs = new TrajectorySettings(){ maxDragDistance = 2f, launchPower = 10f, upwardAngle = 45f, maxAngle = 45f };
    public Status status;
 
+   public HUD_Game hud_Prefab; [ReadOnly] public HUD_Game hud_Inst; public HUD_Game GetHUD(){ return hud_Inst; }
+
    void Awake() { _.pc = this; }
    void Start() {
 
@@ -51,6 +53,7 @@ public class PlayerController_Game : PlayerController{
       setPlayerStartingPos();
       calculateMapCenter();
 
+      hud_Inst = HUD_Game.CreateHUD(this.hud_Prefab, gs.canvasTransform);
    }
    void FixedUpdate(){
       //! Fixed update for move only.
@@ -198,11 +201,6 @@ public class PlayerController_Game : PlayerController{
 
       //P: Limit fly direction within -45 to +45 degree.
       var angle = Vector3.SignedAngle(rawFlyingForce_xComp, inputForward, Vector3.up);
-
-      if (Mathf.Abs(angle) > 45){
-         var clampedAngle = Mathf.Sign(angle) * 45;
-         rawFlyingForce_xComp = Quaternion.Euler(0, clampedAngle, 0) * inputForward;
-      }
 
       //P: Calculate initial xComp velocity
       var velocity_xComponent = rawFlyingForce_xComp * dragDistance * this.trajs.launchPower;

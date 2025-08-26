@@ -68,10 +68,10 @@ public class FoodTray : Actor_Game {
 
    void OnCollisionEnter(Collision collision){
       var go = collision.gameObject;
-      if (!food) return; //!!!!!!!!!!!
-      if (go.CompareTag("Mixer")) { var mixer = go.GetComponent<Mixer>(); if(!mixer) return; OnCollidedWith_Mixer(mixer); };
-      if (go.CompareTag("Fryer")) { var fryer = go.GetComponent<Fryer>(); if (!fryer) return; OnCollidedWith_Fryer(fryer); }
-      if (go.CompareTag("Cutter")) { var cutter = go.GetComponent<Cutter>(); if (!cutter) return; OnCollidedWith_Cutter(cutter); }
+      var machine = go.GetComponent<Machine>();
+      if (machine is Mixer mixer) { OnCollidedWith_Mixer(mixer); };
+      if (machine is Fryer fryer) { OnCollidedWith_Fryer(fryer); }
+      if (machine is Cutter cutter) { OnCollidedWith_Cutter(cutter); }
    }
 
    //! Comparators...?

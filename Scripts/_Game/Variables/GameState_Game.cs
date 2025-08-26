@@ -33,6 +33,7 @@ public class GameState_Game : GameState{
    // Orders
    // public List<Order> orders = new List<Order>();
    public int remainingTime = 300;
+   public int score = 0;
 
    // Machines in Scene
    //! 儘可能唔好use global machine, as they are supposed to handle all their own stuffs by their own.
@@ -45,9 +46,11 @@ public class GameState_Game : GameState{
 
 
    void Start(){
+      Timer.CreateLoopingTimer_NoPhysics(this.gameObject, 1f, ()=>this.remainingTime-=1, this.remainingTime<0 );
       GenerateConveyors();
       RegularSpawnFood();
    }
+
    public void StartGame(){
       this.bgmPlayer.clip = this.assets.game_BGM;
       this.bgmPlayer.volume = 0.3f;

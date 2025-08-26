@@ -48,20 +48,49 @@ public class Timer : MonoBehaviour{
 
    // ************************************************
 
-   public static Timer CreateLoopingTimer(GameObject creator, float waitDuration, Action onFinished, Func<bool> breakCondition){
+   public static Timer CreateLoopingTimer_Physics(GameObject creator, float waitDuration, Action onInterval, bool until){
       var timer = creator.AddComponent<Timer>();
-      timer.StartLoopingTimer(waitDuration, onFinished, breakCondition);
+      timer.StartLoopingTimer_Physics(waitDuration, onInterval, until);
       return timer;
    }
 
-   public void StartLoopingTimer(float waitDuration, Action onFinished, Func<bool> breakCondition){
-      StartCoroutine(LoopingTimerCoroutine(waitDuration, onFinished, breakCondition));
+   public void StartLoopingTimer_Physics(float waitDuration, Action onInterval, bool until){
+      StartCoroutine(LoopingTimerCoroutine_Physics(waitDuration, onInterval, until));
    }
 
-   private IEnumerator LoopingTimerCoroutine(float waitDuration, Action onFinished, Func<bool> breakCondition){
-      while (!breakCondition()){
-         yield return new WaitForSeconds(waitDuration);
-         onFinished?.Invoke();
+   private IEnumerator LoopingTimerCoroutine_Physics(float waitDuration, Action onInterval, bool until){
+      while (!until){
+         float elapsedTime = 0f;
+         while (elapsedTime < waitDuration){
+            elapsedTime += Time.fixedDeltaTime;
+            yield return null;
+         }
+         onInterval?.Invoke();
+      }
+      Destroy(this);
+   }
+
+
+   // *************************************************
+
+   public static Timer CreateLoopingTimer_NoPhysics(GameObject creator, float waitDuration, Action onInterval, bool until){
+      var timer = creator.AddComponent<Timer>();
+      timer.StartLoopingTimer_NoPhysics(waitDuration, onInterval, until);
+      return timer;
+   }
+
+   public void StartLoopingTimer_NoPhysics(float waitDuration, Action onInterval, bool until){
+      StartCoroutine(LoopingTimerCoroutine_NoPhysics(waitDuration, onInterval, until));
+   }
+
+   private IEnumerator LoopingTimerCoroutine_NoPhysics(float waitDuration, Action onInterval, bool until){
+      while (!until){
+         float elapsedTime = 0f;
+         while (elapsedTime < waitDuration){
+            elapsedTime += Time.deltaTime;
+            yield return null;
+         }
+         onInterval?.Invoke();
       }
       Destroy(this);
    }
