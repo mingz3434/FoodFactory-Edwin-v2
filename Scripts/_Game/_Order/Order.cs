@@ -5,26 +5,28 @@ using _ = GameInstance;
 
 public class Order : Actor_Game{
 
-   [ReadOnly] public OrderBox orderBox;
-   public List<OrderedFood> orderedFoods = new List<OrderedFood>();
-   public int orderNumber;
-   public bool isCompleted = false;
+   [ReadOnly] public DeliveryPlate deliveryPlate;
+   public Dictionary<Food, int> orderedFood_Quantity_Map = new Dictionary<Food, int>(); //!!! aka sub-orders
+   public int orderId;
    public int waitedTime = 0;
 
-   public static Order CreateOrder(int orderNumber, List<OrderedFood> orderedFoods){
-      Order order = new Order();
-      order.orderNumber = orderNumber;
-      order.orderedFoods = orderedFoods;
+   public static Order CreateEmptyOrder(Order prefab, Transform parentTransform, int orderId){
+      Order order = Instantiate(prefab, parentTransform);
+      order.orderId = orderId;
       return order;
    }
 
-   public void PairingTheMat(OrderBox orderBox){
-      this.orderBox = orderBox;
+   public void AddSuborder(Food product, int quantity){
+      orderedFood_Quantity_Map.Add(product, quantity);
+   }
+
+   public void PairingThePlate(DeliveryPlate deliveryPlate){
+      this.deliveryPlate = deliveryPlate;
    }
 
    public void OnStackedNewFood_Order(){
-      if(orderBox.foods.Count == orderedFoods.Count){
-         isCompleted = true;
+      if(deliveryPlate.foods.Count == this.orderedFood_Quantity_Map.Count){
+         // isCompleted = true;
       }
    }
 
@@ -32,34 +34,30 @@ public class Order : Actor_Game{
 
       Action calculateScore = () => {
          int _score = 0;
-         foreach(OrderedFood orderedFood in orderedFoods){
-            foreach(Food food in orderBox.foods){
-               if(food.rawFood == orderedFood.rawFood){
-                  _score += 5;
-               }
-               if(food.productName == orderedFood.productName){
-                  _score += 15;
-               }
+         foreach(var orderedFoodName in orderedFood_Quantity_Map.Keys){
+            foreach(Food food in deliveryPlate.foods){
+               // if(food.rawFood == orderedFoodName.ToProduct().rawFood){
+               //    _score += 5;
+               // }
+               // if(food.currentProduct == orderedFoodName.ToProduct().productName){
+               //    _score += 15;
+               // }
             }
          }
-         (_.gs as GameState_Game).score = _score;
+         (_.gs as GameState_Game).inGameInfo.score = _score;
       };
 
 
-      Destroy(orderBox.gameObject);
+      Destroy(deliveryPlate.gameObject);
       Destroy(this.gameObject);
    }
 
 
    void Start(){
-      Action due = () => { (_.gs as GameState_Game).score -= 20; Destroy(this.gameObject); };
+      //Action due = () => { (_.gs as GameState_Game).inGameInfo.score -= 20; Destroy(this.gameObject); };
 
-      Timer.CreateTimer_Physics(this.gameObject, 20f, ()=>due());
+      //Timer.CreateTimer_Physics(this.gameObject, 20f, ()=>due());
    }
 }
 
-public class OrderedFood{
-   public Food.RawFood rawFood;
-   public string productName;
-   public int quantity;
-}
+

@@ -48,11 +48,13 @@
     <Analyzer Include="D:\Unity Client\6000.0.53f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Assets\Scripts\_Game\_UI\HUD_Game.cs" />
+    <Compile Include="..\..\Assets\Scripts\_Game\_UI\Order_UI.cs" />
     <Compile Include="..\..\Assets\Scripts\_Game\_Order\Order.cs" />
     <Compile Include="..\..\Assets\Scripts\_Base\PlayerState.cs" />
     <Compile Include="..\..\Assets\Scripts\_Game\_Machines\Fryer.cs" />
     <Compile Include="..\..\Assets\Scripts\_Game\_ConveyorBeltSegment\ConveyorBeltSegment.cs" />
-    <Compile Include="..\..\Assets\Scripts\_Game\_OrderBox\OrderBox.cs" />
+    <Compile Include="..\..\Assets\Scripts\_Game\_DeliveryPlate\DeliveryPlate.cs" />
     <Compile Include="..\..\Assets\Scripts\_Game\_UI\HUD_Game.cs" />
     <Compile Include="..\..\Assets\Scripts\_Base\Actor.cs" />
     <Compile Include="..\..\Assets\Scripts\FoodMachineInteractionRules\FM_Comparators.cs" />
@@ -65,6 +67,7 @@
     <Compile Include="..\..\Assets\Scripts\_Game\_Characters\PlayerCharacter_Game.cs" />
     <Compile Include="..\..\Assets\Scripts\Tools\ReadOnlyAttribute\ReadOnlyAttribute.cs" />
     <Compile Include="..\..\Assets\Scripts\Tools\Timer.cs" />
+    <Compile Include="..\..\Assets\Scripts\Tools\StringEx.cs" />
     <Compile Include="..\..\Assets\Scripts\_Base\UserWidget.cs" />
     <Compile Include="..\..\Assets\Scripts\_GameInstance\GameInstance.cs" />
     <Compile Include="..\..\Assets\Scripts\_Base\GameState.cs" />

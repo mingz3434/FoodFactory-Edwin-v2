@@ -53,7 +53,7 @@ public class PlayerController_Game : PlayerController{
       setPlayerStartingPos();
       calculateMapCenter();
 
-      hud_Inst = HUD_Game.CreateHUD(this.hud_Prefab, gs.canvasTransform);
+      hud_Inst = HUD_Game.CreateHUD(this.hud_Prefab, gs.transforms.canvasTransform);
    }
    void FixedUpdate(){
       //! Fixed update for move only.

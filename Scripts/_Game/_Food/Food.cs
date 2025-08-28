@@ -11,7 +11,10 @@ public class Food : Actor_Game{
    [SerializeField] public RawFood rawFood;
    public string productName = ""; //! As key!!!
 
-
+   public Food(RawFood rawFood, string productName){
+      this.rawFood = rawFood;
+      this.productName = productName;
+   }
 
    public static Food CreateFood(FoodTray tray, Food prefab, Transform parentTransform, RawFood rawFood){
       var food = Instantiate(prefab, parentTransform);
