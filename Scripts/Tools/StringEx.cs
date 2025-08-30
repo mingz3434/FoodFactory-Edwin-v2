@@ -6,7 +6,7 @@ public static class StringEx{
          case "Failed Chicken" : return "ChickenFailed";
          case "Chicken Nuggets" : return "ChickenNuggets";
          case "Raw Chicken" : return "ChickenRaw";
-
+         default : return productName;
 
       }
    }

@@ -11,9 +11,13 @@ public class Food : Actor_Game{
    [SerializeField] public RawFood rawFood;
    public string productName = ""; //! As key!!!
 
-   public Food(RawFood rawFood, string productName){
-      this.rawFood = rawFood;
-      this.productName = productName;
+   public static Food Create_NonActing_Food(Transform parentTransform, RawFood rawFood, string productName){
+      var food = new GameObject("Non-acting: " + productName).AddComponent<Food>();
+      food.rawFood = rawFood;
+      food.productName = productName;
+      food.transform.SetParent(parentTransform);
+      food.gameObject.SetActive(false);
+      return food;
    }
 
    public static Food CreateFood(FoodTray tray, Food prefab, Transform parentTransform, RawFood rawFood){

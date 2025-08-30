@@ -9,6 +9,8 @@ public class Order : Actor_Game{
    public Dictionary<Food, int> orderedFood_Quantity_Map = new Dictionary<Food, int>(); //!!! aka sub-orders
    public int orderId;
    public int waitedTime = 0;
+   [ReadOnly] public List<Food> orderedFood_List;
+   [ReadOnly] public List<int> quantity_List;
 
    public static Order CreateEmptyOrder(Order prefab, Transform parentTransform, int orderId){
       Order order = Instantiate(prefab, parentTransform);
@@ -18,6 +20,8 @@ public class Order : Actor_Game{
 
    public void AddSuborder(Food product, int quantity){
       orderedFood_Quantity_Map.Add(product, quantity);
+      this.orderedFood_List = new List<Food>(orderedFood_Quantity_Map.Keys);
+      this.quantity_List = new List<int>(orderedFood_Quantity_Map.Values);
    }
 
    public void PairingThePlate(DeliveryPlate deliveryPlate){
@@ -58,6 +62,7 @@ public class Order : Actor_Game{
 
       //Timer.CreateTimer_Physics(this.gameObject, 20f, ()=>due());
    }
+
 }
 
 
