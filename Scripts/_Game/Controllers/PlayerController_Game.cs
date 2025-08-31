@@ -10,6 +10,8 @@ public class PlayerController_Game : PlayerController{
 
    [ReadOnly] public GameState_Game gs; public GameState_Game GetGameState(){ return gs; }
    [ReadOnly] public PlayerCharacter_Game pChar;
+   [ReadOnly] public PlayerState_Game ps;
+   [ReadOnly] public PlayerController_Game_RPCM rpcm;
    [ReadOnly] public TrajectoryLine trajectoryLine;
    [ReadOnly] public Hook hook;
 
@@ -22,14 +24,11 @@ public class PlayerController_Game : PlayerController{
 
    public HUD_Game hud_Prefab; [ReadOnly] public HUD_Game hud_Inst; public HUD_Game GetHUD(){ return hud_Inst; }
 
-   void Awake() { _.pc = this; }
+   void Awake() {
+      if(isLocalPlayer) _.localPC = this;
+   }
    void Start() {
-
-      pChar = _.pChar_Game;
       gs = _.gs as GameState_Game;
-
-      trajectoryLine = TrajectoryLine.CreateTrajectoryLine(gs.prefabs.trajectoryLine_Prefab, pChar.transform);
-      hook = Hook.CreateHook(gs.prefabs.hook_Prefab, pChar.hookContainerTransform);
    
       Action setPlayerStartingPos = () => {
          var spline = gs.splineContainer.Spline;
@@ -70,7 +69,7 @@ public class PlayerController_Game : PlayerController{
       Vector3 tangent = math.normalize(sc.EvaluateTangent(pChar.portionValue));
 
       // Move
-      Vector3 move = tangent * input * pChar.speed;
+      Vector3 move = input * pChar.speed * tangent;
       pChar.GetRigidbody().AddForce(move - pChar.GetRigidbody().linearVelocity, ForceMode.VelocityChange);
       pChar.GetRigidbody().MovePosition(targetPosition);
 

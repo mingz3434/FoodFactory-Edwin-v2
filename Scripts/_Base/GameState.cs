@@ -1,2 +1,3 @@
 using UnityEngine;
-public class GameState : MonoBehaviour { }
+using Mirror;
+public class GameState : NetworkBehaviour { }

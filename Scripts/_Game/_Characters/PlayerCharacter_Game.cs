@@ -14,7 +14,7 @@ public class PlayerCharacter_Game : Character_Game{
    public float portionValue = 0f; // 當前在 Spline 上的位置 (0-1)
    public Transform slotTransform, hookContainerTransform; // 用於存放食物的容器
 
-   void Awake() { _.pChar_Game = this; rb = this.GetComponent<Rigidbody>(); }
+   void Awake() { rb = this.GetComponent<Rigidbody>(); }
 
 }
 

@@ -6,16 +6,8 @@ public class Hook : Actor_Game{
    [ReadOnly] public PlayerController_Game pc;
    [ReadOnly] public PlayerCharacter_Game pChar;
 
-   public static Hook CreateHook(Hook prefab, Transform parentTransform){
-      var hook = Instantiate(prefab, parentTransform);
-      hook.gameObject.name = prefab.gameObject.name;
-      return hook;
-   }
-
    void Awake(){
       gs = _.gs as GameState_Game;
-      pc = _.pc as PlayerController_Game;
-      pChar = _.pChar_Game;
    }
 
    void OnCollisionEnter(Collision collision){

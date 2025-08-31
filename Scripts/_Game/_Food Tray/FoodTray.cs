@@ -13,7 +13,7 @@ public class FoodTray : Actor_Game {
    public Slider slider;
    public TMP_Text exclamationMark_Text;
    public float portionValue;
-   public float speed = 5f;
+   public float speed = 10f;
    public bool bPerserveMomentum = true;
    public float yOffset = 0.5f; // 食物在輸送帶上方的偏移
    public Rigidbody rb;
@@ -41,7 +41,7 @@ public class FoodTray : Actor_Game {
 
    void FixedUpdate(){
       if (gs.splineContainer == null || !bInTrack) return;
-      portionValue += .03f * Time.fixedDeltaTime;
+      portionValue += .06f * Time.fixedDeltaTime;
 
       var newPosition = gs.splineContainer.EvaluatePosition(portionValue); newPosition.y = 1.5f;
       var tangent = gs.splineContainer.EvaluateTangent(portionValue);
@@ -57,7 +57,7 @@ public class FoodTray : Actor_Game {
 
    void Update(){
       if(!canvas_GO.activeSelf) return;
-      var pCharPosition = _.pChar_Game.transform.position;
+      var pCharPosition = (_.localPC as PlayerController_Game).pChar.transform.position;
       var pCharPosition_SameHeight = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
       var direction = pCharPosition_SameHeight - canvas_GO.transform.position;
       if(direction.magnitude == 0f) return;
@@ -119,6 +119,6 @@ public class FoodTray : Actor_Game {
    }
 
    public void BounceBack(){
-      this.SnapTo(_.pChar_Game.slotTransform);
+      this.SnapTo((_.localPC as PlayerController_Game).pChar.slotTransform);
    }
 }

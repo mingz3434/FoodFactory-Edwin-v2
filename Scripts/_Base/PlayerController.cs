@@ -1,2 +1,3 @@
 using UnityEngine;
-public class PlayerController : MonoBehaviour { }
+using Mirror;
+public class PlayerController : NetworkBehaviour { }
