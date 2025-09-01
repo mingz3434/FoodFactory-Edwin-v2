@@ -137,6 +137,7 @@ GameObject:
   - component: {fileID: 4593348478538229865}
   - component: {fileID: 2362725138735452834}
   - component: {fileID: 563265061777658968}
+  - component: {fileID: 4562568104156199334}
   m_Layer: 0
   m_Name: Fryer
   m_TagString: Fryer
@@ -249,8 +250,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9455fe9b32e90584fbe51a6e383b6cf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   slots:
   - {fileID: 5668870970352461832}
   - {fileID: 3253845749294984611}
   - {fileID: 4478691749440507979}
   - {fileID: 4360226859825573475}
+--- !u!114 &4562568104156199334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6653594380054177272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  _assetId: 2674665033
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

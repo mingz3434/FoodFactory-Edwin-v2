@@ -28,6 +28,7 @@ public class PlayerController_Game : PlayerController{
       if(isLocalPlayer) _.localPC = this;
    }
    void Start() {
+      
       gs = _.gs as GameState_Game;
    
       Action setPlayerStartingPos = () => {
@@ -53,6 +54,7 @@ public class PlayerController_Game : PlayerController{
       calculateMapCenter();
 
       hud_Inst = HUD_Game.CreateHUD(this.hud_Prefab, gs.transforms.canvasTransform);
+
    }
    void FixedUpdate(){
       //! Fixed update for move only.

@@ -25,7 +25,7 @@ public class HUD_Game : UserWidget{
 
    void Update(){
       Action updateTimer = () => {
-         var remainingTime = (_.gs as GameState_Game).inGameInfo.remainingTime;
+         var remainingTime = (_.gs as GameState_Game).inGameInfo_remainingTime;
          var mm = remainingTime / 60;
          var ss = remainingTime % 60;
          timer.GetComponent<TMP_Text>().text = mm.ToString("00") + ":" + ss.ToString("00");

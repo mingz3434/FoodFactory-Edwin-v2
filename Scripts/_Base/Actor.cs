@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
+using Mirror;
 using UnityEngine;
 
-public class Actor : MonoBehaviour { }
+public class Actor : NetworkBehaviour { }
 
 public class Actor_Game : Actor { }
 

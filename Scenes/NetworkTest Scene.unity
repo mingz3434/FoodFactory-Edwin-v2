@@ -311,6 +311,7 @@ GameObject:
   - component: {fileID: 810704289}
   - component: {fileID: 810704290}
   - component: {fileID: 810704287}
+  - component: {fileID: 810704291}
   m_Layer: 0
   m_Name: NW
   m_TagString: Untagged
@@ -375,7 +376,17 @@ MonoBehaviour:
   playerPrefab: {fileID: 1491916488470746214, guid: 087e29a8e2c90e04690483740503f942, type: 3}
   autoCreatePlayer: 1
   playerSpawnMethod: 0
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 8639859705484861109, guid: 46201822b03dd704fbd120f7ae1a4b1e, type: 3}
+  - {fileID: 5855000089644427079, guid: a6e04d48068b8b547bf57704560e8f96, type: 3}
+  - {fileID: 1120390292087672263, guid: 59020b7a2a73c974886e9cf061e6b5ac, type: 3}
+  - {fileID: 2850547939880037955, guid: 8ee08cd454710664dbbdf3bb43a71e64, type: 3}
+  - {fileID: 8359901461110438262, guid: 689f228a531a9b945b3704b932692623, type: 3}
+  - {fileID: 5855000089644427079, guid: e9e1ae699776a4148b3d9d9ac175a5b8, type: 3}
+  - {fileID: 6653594380054177272, guid: 529b5e70febad574080105558b87864d, type: 3}
+  - {fileID: 7390605381985425926, guid: 64df4b1abf5348748b967d353dc6643d, type: 3}
+  - {fileID: 6612675130514834604, guid: 17eacd3f90082d640812b86571d24372, type: 3}
+  - {fileID: 8699545629456821589, guid: ae25756080f80ff4e9aa92a45365b23b, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:
     bufferTimeMultiplier: 2
@@ -391,6 +402,18 @@ MonoBehaviour:
   evaluationMethod: 0
   evaluationInterval: 3
   timeInterpolationGui: 0
+--- !u!114 &810704291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 810704286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef4bffeda13d7a748973ff9204401c07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &881083412
 GameObject:
   m_ObjectHideFlags: 0
@@ -826,6 +849,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1144b7528659e1546a4384968f31b167, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  preGameCamera: {fileID: 1240568215}
   myNetworkManager_Inst: {fileID: 810704290}
 --- !u!4 &1356769313
 Transform:

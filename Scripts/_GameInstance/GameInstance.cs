@@ -15,6 +15,7 @@ public class GameInstance : MonoBehaviour{
    public static GameState gs; //! Need network
    public static PlayerController localPC; //! Need network, having pc_RPCM, pChar, PS....
 
+   public Camera preGameCamera;
    public static CustomNetworkManager myNetworkManager;
    
    public static SteamLobby_UI steamLobby_UI;
@@ -28,12 +29,14 @@ public class GameInstance : MonoBehaviour{
    void Awake(){
       gameInstance = this;
       myNetworkManager = myNetworkManager_Inst;
-      DontDestroyOnLoad(this.gameObject);
-      DontDestroyOnLoad(steamLobby_UI.transform.parent.gameObject);
    }
 
 
    void Start(){
+      
+      DontDestroyOnLoad(this.gameObject);
+      DontDestroyOnLoad(steamLobby_UI.transform.parent.gameObject);
+
       //P: Require SteamManager to be initialized.
       if(!SteamManager.Initialized) { Debug.Log("SteamManager not initialized."); return; }
 
@@ -102,6 +105,7 @@ public class GameInstance : MonoBehaviour{
          hostButton.gameObject.SetActive(false);
          lobbyNameText.gameObject.SetActive(true);
          lobbyNameText.text = lobbysName;
+         preGameCamera.gameObject.SetActive(false);
       };
       renderToUI();
 

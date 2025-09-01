@@ -9,9 +9,20 @@ public class GameState_Game_RPCM : NetworkBehaviour {
 
    public GameState_Game gs;
 
-   [ServerActive]
+   [Server]
    public void Server_StartTimer() { //Broadcast timer time by SyncVar
-      Timer.CreateLoopingTimer_NoPhysics(gs.gameObject, 1f, () => gs.inGameInfo.remainingTime -= 1, gs.inGameInfo.remainingTime < 0);
+      Timer.CreateTimer_NoPhysics(
+         gs.gameObject,
+         1f,
+         () => {
+            gs.inGameInfo_remainingTime -= 1;
+            Debug.Log("Timer tick: " + gs.inGameInfo_remainingTime);
+            var b = gs.inGameInfo_remainingTime <= 0;
+            if(!b) {
+               Server_StartTimer();
+            }
+         }
+      );
    }
 
    [ServerActive]

@@ -16,7 +16,7 @@ public class GameState_Game : GameState {
    [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; public Order order_Prefab; }
    [Serializable] public struct ConveyorSettings { public float segmentLength, width; }
    [Serializable] public struct Transforms { public Transform mapTransform, canvasTransform, conveyorBeltContainerTransform, foodTrayOnBeltContainerTransform, orderTransform; }
-   [Serializable] public struct InGameInfo { [SyncVar] public int remainingTime, score; public int totalOrdersRequired_GR, remainingOrders_Int_GR; public List<Order> pendingOrders; public int latestOrderId; } // GR for Game Round.
+   [Serializable] public struct InGameInfo { [SyncVar] public int remainingTime, score; public int totalOrdersRequired_GR, remainingOrders_Int_GR; public List<Order> pendingOrders; public int latestOrderId; } /* GR for Game Round. */ [SyncVar] public int inGameInfo_remainingTime = 10;
    [Serializable] public struct NetworkInfo { public int totalPlayers, enteredPlayers; public List<PlayerController_Game> players; }
 
    public GameState_Game_RPCM rpcm;
@@ -35,7 +35,7 @@ public class GameState_Game : GameState {
 
    void Start(){
       while (!NetworkClient.ready) { StartCoroutine(CRT()); return; } //* Keep it blocked is acutally good somehow.
-      NetworkClient.AddPlayer(); //!!!!!!
+      // NetworkClient.AddPlayer(); //!!!!!!
       // PlayBGM();
       rpcm.Server_StartTimer();
       rpcm.Server_GenerateConveyors();

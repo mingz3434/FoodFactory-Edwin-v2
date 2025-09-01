@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8120071435373816374}
   - component: {fileID: 8567303338972025413}
   - component: {fileID: 10608647553440907}
+  - component: {fileID: 866314109374648399}
   m_Layer: 8
   m_Name: Food
   m_TagString: Untagged
@@ -85,7 +86,7 @@ SpriteRenderer:
   m_Size: {x: 10.24, y: 10.24}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &10608647553440907
@@ -100,3 +101,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d46cbdb157f4f4145be72c38188d9971, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  tray: {fileID: 0}
+  rawFood: 0
+  productName: 
+--- !u!114 &866314109374648399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2850547939880037955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  _assetId: 1466548797
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

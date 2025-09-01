@@ -4,6 +4,7 @@ using _ = GameInstance;
 using Unity.Mathematics;
 using UnityEngine.UI;
 using TMPro;
+using Mirror;
 
 public class FoodTray : Actor_Game {
    [ReadOnly] public GameState_Game gs;
@@ -21,17 +22,18 @@ public class FoodTray : Actor_Game {
 
    public static FoodTray CreateFoodTray(FoodTray prefab, Transform parentTransform){
       var tray = Instantiate(prefab, parentTransform);
-      tray.gs = _.gs as GameState_Game;
-      var sc = tray.gs.splineContainer;
+      var sc = (_.gs as GameState_Game).splineContainer;
       tray.transform.position = sc.EvaluatePosition(0f);
       tray.transform.Translate(new Vector3(0,1f,0));
       
       System.Random r = new System.Random();
       int n = r.Next(0,2);
-      tray.food = Food.CreateFood(tray, tray.gs.prefabs.food_Prefab, tray.transform, (Food.RawFood)n );
+      tray.food = Food.CreateFood(tray, (_.gs as GameState_Game).prefabs.food_Prefab, tray.transform, (Food.RawFood)n );
 
       var suffix = n == 0 ? "Chicken" : "Potato";
       tray.gameObject.name = "FoodTray : " + suffix;
+
+      NetworkServer.Spawn(tray.gameObject);
       return tray;
    }
 
@@ -40,7 +42,7 @@ public class FoodTray : Actor_Game {
    }
 
    void FixedUpdate(){
-      if (gs.splineContainer == null || !bInTrack) return;
+      if ((_.gs as GameState_Game).splineContainer == null || !bInTrack) return;
       portionValue += .06f * Time.fixedDeltaTime;
 
       var newPosition = gs.splineContainer.EvaluatePosition(portionValue); newPosition.y = 1.5f;

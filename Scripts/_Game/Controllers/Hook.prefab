@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 5997802589623086382}
   - component: {fileID: 3939220111661597590}
   - component: {fileID: 4769596760136872830}
+  - component: {fileID: 369161245471777032}
   m_Layer: 10
   m_Name: Hook
   m_TagString: Untagged
@@ -518,6 +519,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d215c34e48673940a423cffe5d1e56b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   gs: {fileID: 0}
   pc: {fileID: 0}
   pChar: {fileID: 0}
+--- !u!114 &369161245471777032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6612675130514834604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  _assetId: 762682702
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
