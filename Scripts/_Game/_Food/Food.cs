@@ -2,38 +2,43 @@ using UnityEngine;
 using _ = GameInstance;
 using Mirror;
 
-public class Food : Actor_Game{
+public class Food : NetworkBehaviour{
+   public FoodTray tray;
+   public enum RawFood { Chicken, Potato }
 
-   [ReadOnly] public FoodTray tray;
-   [ReadOnly] GameState_Game gs;
+   [SyncVar(hook = nameof(OnRawFoodChanged))] public RawFood rawFood;
+   public string productName;
+   private SpriteRenderer spriteRenderer;
 
-   public enum RawFood{ Chicken, Potato }
-   
-   [SerializeField] public RawFood rawFood;
-   public string productName = ""; //! As key!!!
+   void Awake() { spriteRenderer = GetComponent<SpriteRenderer>(); }
+   void Start() { UpdateSprite(rawFood); }
+   void OnRawFoodChanged(RawFood oldValue, RawFood newValue) { UpdateSprite(newValue); }
 
-   public static Food Create_NonActing_Food(Transform parentTransform, RawFood rawFood, string productName){
-      var food = new GameObject("Non-acting: " + productName).AddComponent<Food>();
-      food.rawFood = rawFood;
-      food.productName = productName;
-      food.transform.SetParent(parentTransform);
-      food.gameObject.SetActive(false);
-      NetworkServer.Spawn(food.gameObject);
-      return food;
-   }
+   void UpdateSprite(RawFood foodType){
+      var gs = _.gs as GameState_Game;
+      if (!gs) { Debug.LogError("GameState_Game is null!"); return; }
 
-   public static Food CreateFood(FoodTray tray, Food prefab, Transform parentTransform, RawFood rawFood){
-      var food = Instantiate(prefab, parentTransform);
-      food.tray = tray;
-      var spriteRenderer = food.GetComponent<SpriteRenderer>();
-      switch(rawFood){
-         case RawFood.Chicken: spriteRenderer.sprite = (_.gs as GameState_Game).assets.chickenRaw_Sprite; food.gameObject.name = "Raw Chicken"; food.rawFood = rawFood; break;
-         case RawFood.Potato: spriteRenderer.sprite = (_.gs as GameState_Game).assets.potatoRaw_Sprite; food.gameObject.name = "Raw Potato"; food.rawFood = rawFood; break;
-         default: break;
+      switch (foodType){
+         case RawFood.Chicken:
+            var chickenSprite = gs.assets.chickenRaw_Sprite;
+            if (!chickenSprite) { Debug.LogError("chickenRaw_Sprite is null!"); return; }
+            spriteRenderer.sprite = chickenSprite;
+            productName = "Raw Chicken";
+            gameObject.name = "Raw Chicken";
+            break;
+
+         case RawFood.Potato:
+            var potatoSprite = gs.assets.potatoRaw_Sprite;
+            if (!potatoSprite) { Debug.LogError("potatoRaw_Sprite is null!"); return; }
+            spriteRenderer.sprite = potatoSprite;
+            productName = "Raw Potato";
+            gameObject.name = "Raw Potato";
+            break;
+
+         default:
+            Debug.LogError("Invalid food type: " + foodType);
+            break;
+
       }
-      food.productName = rawFood==RawFood.Chicken ? "Raw Chicken" : "Raw Potato";
-      NetworkServer.Spawn(food.gameObject);
-      return food;
    }
-
 }

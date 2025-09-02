@@ -31,7 +31,6 @@ public class GameInstance : MonoBehaviour{
       myNetworkManager = myNetworkManager_Inst;
    }
 
-
    void Start(){
       
       DontDestroyOnLoad(this.gameObject);

@@ -74,37 +74,28 @@ public class GameState_Game : GameState {
    }
 
    public void RegularAddNewOrder() {
-      if (this.inGameInfo.pendingOrders.Count < 3) {
-         var newId = this.inGameInfo.latestOrderId + 1;
-         var howManyKinds = UnityEngine.Random.Range(1, 5);
+      // if (this.inGameInfo.pendingOrders.Count < 3) {
+      //    var newId = this.inGameInfo.latestOrderId + 1;
+      //    var howManyKinds = UnityEngine.Random.Range(1, 5);
 
-         var foods = new Dictionary<Food, int>();
-         for (int i = 0; i < howManyKinds; i++) {
-            var food = GetRandomFood();
-            var howMany = UnityEngine.Random.Range(2, 13);
-            foods.Add(food, howMany);
-         }
+      //    var foods = new Dictionary<Food, int>();
+      //    for (int i = 0; i < howManyKinds; i++) {
+      //       var food = GetRandomFood();
+      //       var howMany = UnityEngine.Random.Range(2, 13);
+      //       foods.Add(food, howMany);
+      //    }
 
-         this.AddPendingOrder(newId, foods);
+      //    this.AddPendingOrder(newId, foods);
 
-      }
+      // }
    }
 
-   public Food GetRandomFood() {
+   public string GetRandomFood() {
       System.Random r = new System.Random();
       int result = r.Next(0, 1);
       switch (result) {
-         case 0: return Food.Create_NonActing_Food(this.transforms.orderTransform, Food.RawFood.Chicken, "Fried Chicken");
-         // case 1: return "Pizza";
-         // case 2: return "Pasta";
-         // case 3: return "Sushi";
-         // case 4: return "Pancakes";
-         // case 5: return "Waffles";
-         // case 6: return "Tacos";
-         // case 7: return "Pasta";
-         // case 8: return "Sushi";
-         // case 9: return "Pancakes";
-         default: return Food.Create_NonActing_Food(this.transforms.orderTransform, 0, "Fried Chicken");
+
+         default: return "HI";
       }
    }
 

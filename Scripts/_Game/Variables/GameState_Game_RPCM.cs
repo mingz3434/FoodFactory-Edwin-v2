@@ -4,6 +4,7 @@ using BroadcastToClients = Mirror.ClientRpcAttribute;
 using CallServer = Mirror.CommandAttribute;
 using ServerActive = Mirror.ServerAttribute;
 using UnityEngine.Splines;
+using _ = GameInstance;
 
 public class GameState_Game_RPCM : NetworkBehaviour {
 
@@ -48,8 +49,15 @@ public class GameState_Game_RPCM : NetworkBehaviour {
    [ServerActive]
    public void Server_RegularSpawnFood(){
       Timer.CreateTimer_Physics(gs.gameObject, 2f, () => {
+         // Client_LogWarning(_.gameInstance ? "gi exists" : "gi does not exist");
+         // Client_LogWarning(_.gs ? "gs exists" : "gs does not exist");
          var foodTray = FoodTray.CreateFoodTray(gs.prefabs.foodTray_Prefab, gs.transforms.foodTrayOnBeltContainerTransform);
          Server_RegularSpawnFood();
       });
+   }
+
+   [BroadcastToClients]
+   public void Client_LogWarning(string message){
+      Debug.LogWarning(message);
    }
 }

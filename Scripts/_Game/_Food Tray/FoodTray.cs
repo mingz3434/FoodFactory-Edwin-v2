@@ -7,8 +7,8 @@ using TMPro;
 using Mirror;
 
 public class FoodTray : Actor_Game {
-   [ReadOnly] public GameState_Game gs;
-   [ReadOnly] public Food food;
+
+   public Food food;
 
    public GameObject canvas_GO;
    public Slider slider;
@@ -18,22 +18,36 @@ public class FoodTray : Actor_Game {
    public bool bPerserveMomentum = true;
    public float yOffset = 0.5f; // 食物在輸送帶上方的偏移
    public Rigidbody rb;
-   public bool bInTrack = true;
+   [SyncVar (hook="OnInTrackChanged")] public bool bInTrack = true;
+   public void OnInTrackChanged(bool oldValue, bool newValue){
+      if(newValue == false){
+         transform.localPosition = Vector3.zero;
+         transform.localRotation = Quaternion.identity;
+         rb.isKinematic = true;
+         rb.useGravity = false;
+      }
+   }
 
    public static FoodTray CreateFoodTray(FoodTray prefab, Transform parentTransform){
+      
       var tray = Instantiate(prefab, parentTransform);
+
       var sc = (_.gs as GameState_Game).splineContainer;
       tray.transform.position = sc.EvaluatePosition(0f);
       tray.transform.Translate(new Vector3(0,1f,0));
-      
+
+      var tangent = sc.EvaluateTangent(0f);
+      tray.transform.rotation = Quaternion.LookRotation(tangent);
+
+      NetworkServer.Spawn(tray.gameObject);
+
       System.Random r = new System.Random();
       int n = r.Next(0,2);
-      tray.food = Food.CreateFood(tray, (_.gs as GameState_Game).prefabs.food_Prefab, tray.transform, (Food.RawFood)n );
+      tray.food.rawFood = (Food.RawFood)n;
 
       var suffix = n == 0 ? "Chicken" : "Potato";
       tray.gameObject.name = "FoodTray : " + suffix;
 
-      NetworkServer.Spawn(tray.gameObject);
       return tray;
    }
 
@@ -45,8 +59,8 @@ public class FoodTray : Actor_Game {
       if ((_.gs as GameState_Game).splineContainer == null || !bInTrack) return;
       portionValue += .06f * Time.fixedDeltaTime;
 
-      var newPosition = gs.splineContainer.EvaluatePosition(portionValue); newPosition.y = 1.5f;
-      var tangent = gs.splineContainer.EvaluateTangent(portionValue);
+      var newPosition = (_.gs as GameState_Game).splineContainer.EvaluatePosition(portionValue); newPosition.y = 1.5f;
+      var tangent = (_.gs as GameState_Game).splineContainer.EvaluateTangent(portionValue);
       var faceDirection = tangent;
 
       if (rb) { rb.MovePosition(newPosition); if (bPerserveMomentum) { rb.linearVelocity = math.normalize(tangent) * speed; } }
