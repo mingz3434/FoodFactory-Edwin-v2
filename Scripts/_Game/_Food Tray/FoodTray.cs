@@ -21,10 +21,10 @@ public class FoodTray : Actor_Game {
    [SyncVar (hook="OnInTrackChanged")] public bool bInTrack = true;
    public void OnInTrackChanged(bool oldValue, bool newValue){
       if(newValue == false){
-         transform.localPosition = Vector3.zero;
-         transform.localRotation = Quaternion.identity;
          rb.isKinematic = true;
          rb.useGravity = false;
+         transform.localPosition = new Vector3(0,1.5f,0);
+         transform.localRotation = Quaternion.identity;
       }
    }
 

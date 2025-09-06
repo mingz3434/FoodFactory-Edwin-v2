@@ -11,28 +11,22 @@ public class TestPC : NetworkBehaviour{
       if(!isLocalPlayer){ var cam = this.transform.GetChild(0).GetChild(0).gameObject; cam.SetActive(false); }
       character.transform.SetParent(this.transform.parent);
       this.transform.SetParent(null);
-      rpcm.character = this.character;
       rpcm.ps = this.ps;
    }
 
    void Update(){
-      if (isLocalPlayer){
-         float horizontalInput = Input.GetAxis("Horizontal");
-         float verticalInput = Input.GetAxis("Vertical");
-         
-         // 計算移動向量
-         Vector3 movement = new Vector3(horizontalInput, 0f, verticalInput).normalized * Time.deltaTime * 2;
-         
-         // 更新角色位置
-         character.Move(movement);
-         
-         // 將新位置發送到伺服器
-         if (movement != Vector3.zero)
-         {
-               rpcm.UpdatePosition_ServerRPC(character.transform.position);
-         }
 
-         if (Input.GetKeyDown(KeyCode.Space)) { Debug.Log("Space"); PickUpFoodLogics(); }
+   }
+
+   void FixedUpdate(){
+         if (isLocalPlayer){
+
+
+
+
+         // if (Input.GetKeyDown(KeyCode.Space)) { Debug.Log("Space"); PickUpFoodLogics(); }
+         if (Input.GetKey(KeyCode.Space)) { character.Jump(); }
+         if (Input.anyKey == false ) { character.Idle(); }
       }
    }
 
@@ -61,6 +55,10 @@ public class TestPC : NetworkBehaviour{
       var foodTray = go.GetComponent<FoodTray>(); if(!foodTray){ Debug.LogWarning("Cmd_PickUpFood: Invalid food tray."); return; }
       var pc = sender.identity.GetComponent<TestPC>(); if(!pc){ Debug.LogWarning("Cmd_PickUpFood: Invalid player controller."); return; }
 
+      //! Has to set syncDirection before passing authority to client.
+      // foodTray.syncDirection = SyncDirection.ClientToServer;
+
+      // Pass authority to client.
       var identity = go.GetComponent<NetworkIdentity>();
       identity.AssignClientAuthority(sender);
 
@@ -77,8 +75,8 @@ public class TestPC : NetworkBehaviour{
 
       FoodTray foodTray = foodObject.GetComponent<FoodTray>();
       if (foodTray != null){
-         foodTray.transform.parent = pc.character.transform + Vector3.up * 1.5f;
-         foodTray.bInTrack = false;
+         foodTray.transform.parent = pc.character.transform;
+         foodTray.bInTrack = false; //! HOOK
          Debug.Log($"Rpc_SyncPickup: Food synced to Player {player.name}'s Food Slot!");
       }
    }

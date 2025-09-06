@@ -507,7 +507,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  remainingTime: 0
+  inGameInfo_remainingTime: 10
   rpcm: {fileID: 805521296}
   splineContainer: {fileID: 1793575314}
   splineCenter: {x: 0, y: 0, z: 0}
