@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using System;
 using Mirror;
 using UnityEditor.Animations;
+using UnityEngine.SocialPlatforms;
 
 public class ThirdPerson_PC : NetworkBehaviour {
 
@@ -11,7 +12,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
    [Serializable] public class GroundSettings { public bool bIsGrounded = true; public float groundedOffset = -.14f, groundedRadius = .28f; public LayerMask groundLayers; }
    [Serializable] public class CameraSettings { public GameObject cinemachineCameraTarget; public float topClamp = 70f, bottomClamp = -30f, cameraAngleOverride = 0f; public bool lockCameraPosition = false; [ReadOnly] public float cinemachineTargetYaw, cinemachineTargetPitch; }
    [Serializable] public class AudioSettings { public AudioClip landingAudioClip; public AudioClip[] footstepAudioClips; public float footstepAudioVolume = .5f; }
-   [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int playingNonLocomotionAnim_Id, isMoving_Id, isJumping_Id; }
+   [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; }
 
    public enum AnimationState { Locomotion, Jumping, Punching }
    public AnimationState animationState = AnimationState.Locomotion;
@@ -21,7 +22,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
    public GroundSettings grounds;
    public CameraSettings cameras;
    public AudioSettings audios;
-   public AnimSettings animators;
+   public AnimSettings _a;
 
    public PlayerInput playerInput;
    public Animator animator;
@@ -46,34 +47,54 @@ public class ThirdPerson_PC : NetworkBehaviour {
    }
 
    private void AssignAnimatorHashIds() {
-      animators.playingNonLocomotionAnim_Id = Animator.StringToHash("playingNonLocomotionAnim");
-      animators.isMoving_Id = Animator.StringToHash("isMoving");
-      animators.isJumping_Id = Animator.StringToHash("isJumping");
+      _a.speed_Id = Animator.StringToHash("Speed");
+      _a.loco_Id = Animator.StringToHash("Loco");
+      _a.jumping_Id = Animator.StringToHash("Jumping");
+      // _a.punching_Id = Animator.StringToHash("Punching");
    }
 
    void Update(){
-      _OnMove(input.move);
-      if (bSprintPressing) { _OnSprintPressing(); } else { _OnSprintReleasing(); }
+      AnimatorParamToLocal();
+
+      OnMove_(input.move);
+      if (bSprintPressing) { OnSprintPressing_(); } else { OnSprintReleasing_(); }
+
+      LocalParamToAnimator();
    }
+
+   void AnimatorParamToLocal() {
+      // var speed = Mathf.Abs(_a.speed_Id); (no need)
+      var bLoco = animator.GetBool(_a.loco_Id);
+      var bJumping = animator.GetBool(_a.jumping_Id);
+
+   }
+
+   void LocalParamToAnimator() {
+      var speed = movements.speed;
+      var bLoco = animationState == AnimationState.Locomotion;
+      var bJumping = animationState == AnimationState.Jumping;
+      // var bPunching = animationState == AnimationState.Punching;
+      animator.SetFloat(_a.speed_Id, speed);
+      animator.SetBool(_a.loco_Id, bLoco);
+      animator.SetBool(_a.jumping_Id, bJumping);
+      // animator.SetBool(_a.punching_Id, bPunching);
+
+   }
+
    bool bSprintPressing = false;
-   public void _OnSprintPressing(){ bSprintPressing = true; }
-   public void _OnSprintReleasing(){ bSprintPressing = false; }
-   public void _OnJump() {
-
-      var bPlayingNonLocomotionAnim = animator.GetBool(animators.playingNonLocomotionAnim_Id);
-      if(bPlayingNonLocomotionAnim) return;
-
-      var bJumping = animator.GetBool(animators.isJumping_Id);
-      if(!bJumping){
-         animator.CrossFade("Jump_1",.25f, 0, 0f);
-         animator.SetBool(animators.isJumping_Id, true);
-         Timer.CreateTimer_NoPhysics(this.gameObject, .7f, () => { animator.SetBool(animators.isJumping_Id, false); animator.CrossFade("Idle_1",.25f, 0, 0f); } );
+   public void OnSprintPressing_(){ bSprintPressing = true; }
+   public void OnSprintReleasing_(){ bSprintPressing = false; }
+   public void OnJump_() {
+      var bLoco = animationState == AnimationState.Locomotion;
+      if(bLoco) {
+         animationState = AnimationState.Jumping;
+         if(!B_AnimClipFinished(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
+         Timer.CreateTimer_NoPhysics(this.gameObject, .9f, () => { animationState = AnimationState.Locomotion; });
       }
+
    }
 
-   public void _OnMove(Vector2 inputVector) {
-      if(animator.GetBool(animators.playingNonLocomotionAnim_Id)) return;
-      if(animator.GetBool(animators.isJumping_Id)) return;
+   public void OnMove_(Vector2 inputVector) {
 
       void calculateTargetSpeed() {
          float targetSpeed = bSprintPressing ? movements.sprintSpeed : movements.moveSpeed;
@@ -96,8 +117,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
             movements.speed = movements.targetSpeed;
          }
 
-         animators.blendedValue = Mathf.Lerp(animators.blendedValue, movements.targetSpeed, Time.deltaTime * movements.speedChangeRate);
-         if (animators.blendedValue < 0.01f) animators.blendedValue = 0f;
+         _a.blendedValue = Mathf.Lerp(_a.blendedValue, movements.targetSpeed, Time.deltaTime * movements.speedChangeRate);
+         if (_a.blendedValue < 0.01f) _a.blendedValue = 0f;
       }
 
       void calculateTargetRotation() {
@@ -120,42 +141,38 @@ public class ThirdPerson_PC : NetworkBehaviour {
             new Vector3(0.0f, jumps.verticalVelocity, 0.0f) * Time.deltaTime);
       }
 
-      void playAnimation() {
-         var bJumping = animator.GetBool(animators.isJumping_Id);
-         var bPlayingNonLocomotionAnim = animator.GetBool(animators.playingNonLocomotionAnim_Id);
-         if(bPlayingNonLocomotionAnim) return;
-         if(bJumping) return;
-         
-         var bMoving = animator.GetBool(animators.isMoving_Id);
-         if(!bMoving) {
-            animator.SetBool(animators.isMoving_Id, true);
-            animator.CrossFade("Move_1",.5f, 0, 0f);
-         }
 
-         if(movements.speed <= 0.1f) {
-            animator.Play("Idle_1");
-         }
-      }
 
       calculateTargetSpeed();
       smoothSpeedChange();
       calculateTargetRotation();
       applyMovementAndRotation();
-      playAnimation();
-   }
 
-   void ResetToIdle(){
-      if(animator.GetBool(animators.playingNonLocomotionAnim_Id)) return;
-      if(animator.GetBool(animators.isJumping_Id)) return;
-      if(animator.GetBool(animators.isMoving_Id)){
-         animator.CrossFade("Idle_1",.5f, 0, 0f);
-         animator.SetBool(animators.isMoving_Id, false);
+
+      // Anim
+      var bJumping = animationState == AnimationState.Jumping;
+      if(bJumping) return;
+
+      animationState = AnimationState.Locomotion;
+
+      //!!!!!!!!!!!!!!!!!!!!!!!
+      var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
+
+      //varis anim by speed sth like that.
+      if(movements.speed > 0.1f) {
+         if (!B_AnimClipFinished(animatorInfo, "Move_1")) animator.Play("Move_1");
       }
+      else{
+         if (!B_AnimClipFinished(animatorInfo, "Idle_1")) animator.Play("Idle_1");
+      }
+
    }
 
 
 
-   void _OnLook(Vector2 inputVector) {
+
+
+   void OnLook_(Vector2 inputVector) {
       if (inputVector.sqrMagnitude >= THRESHOLD && !cameras.lockCameraPosition) {
          float deltaTimeMultiplier = 1.0f;
 
@@ -170,7 +187,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
          cameras.cinemachineTargetYaw, 0.0f);
    }
    void LateUpdate(){
-      _OnLook(input.look);
+      OnLook_(input.look);
    }
 
    // ******* EXTRAS BELOW ********
@@ -201,5 +218,9 @@ public class ThirdPerson_PC : NetworkBehaviour {
       if (animationEvent.animatorClipInfo.weight > 0.5f) {
          AudioSource.PlayClipAtPoint(audios.landingAudioClip, transform.TransformPoint(characterController.center), audios.footstepAudioVolume);
       }
+   }
+
+   public bool B_AnimClipFinished(AnimatorStateInfo animatorStateInfo, string stateName){
+      return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
 }
