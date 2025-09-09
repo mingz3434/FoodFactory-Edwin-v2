@@ -9,7 +9,7 @@ public class TestPC : NetworkBehaviour{
 
    void Start(){
       if(!isLocalPlayer){ var cam = this.transform.GetChild(0).GetChild(0).gameObject; cam.SetActive(false); }
-      character.transform.SetParent(this.transform.parent);
+      // character.transform.SetParent(this.transform.parent);
       this.transform.SetParent(null);
       rpcm.ps = this.ps;
    }
@@ -19,14 +19,14 @@ public class TestPC : NetworkBehaviour{
    }
 
    void FixedUpdate(){
-         if (isLocalPlayer){
+      if (isLocalPlayer){
 
 
 
 
          // if (Input.GetKeyDown(KeyCode.Space)) { Debug.Log("Space"); PickUpFoodLogics(); }
-         if (Input.GetKey(KeyCode.Space)) { character.Jump(); }
-         if (Input.anyKey == false ) { character.Idle(); }
+         // if (Input.GetKey(KeyCode.Space)) { character.Jump(); }
+         // if (Input.anyKey == false ) { character.Idle(); }
       }
    }
 
@@ -55,9 +55,6 @@ public class TestPC : NetworkBehaviour{
       var foodTray = go.GetComponent<FoodTray>(); if(!foodTray){ Debug.LogWarning("Cmd_PickUpFood: Invalid food tray."); return; }
       var pc = sender.identity.GetComponent<TestPC>(); if(!pc){ Debug.LogWarning("Cmd_PickUpFood: Invalid player controller."); return; }
 
-      //! Has to set syncDirection before passing authority to client.
-      // foodTray.syncDirection = SyncDirection.ClientToServer;
-
       // Pass authority to client.
       var identity = go.GetComponent<NetworkIdentity>();
       identity.AssignClientAuthority(sender);
@@ -67,14 +64,12 @@ public class TestPC : NetworkBehaviour{
 
    [ClientRpc]
    void Rpc_SyncPickup(GameObject foodObject, GameObject player){
-      // 在客戶端同步拾取狀態
       if (foodObject == null || player == null) return;
 
       TestPC pc = player.GetComponent<TestPC>();
-      if (!pc) return;
-
       FoodTray foodTray = foodObject.GetComponent<FoodTray>();
-      if (foodTray != null){
+
+      if (pc && foodTray){
          foodTray.transform.parent = pc.character.transform;
          foodTray.bInTrack = false; //! HOOK
          Debug.Log($"Rpc_SyncPickup: Food synced to Player {player.name}'s Food Slot!");

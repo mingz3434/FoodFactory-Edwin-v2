@@ -1218,7 +1218,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6401127161281672912}
   - component: {fileID: 6401127161290987898}
-  - component: {fileID: 285451406056992790}
   - component: {fileID: 4934205248345412642}
   m_Layer: 0
   m_Name: ma014_Robot_G1_1
@@ -1266,62 +1265,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &285451406056992790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6401127161281637106}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26e54e5a728a9234ab24fcf1460ed8a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  movements:
-    moveSpeed: 0
-    sprintSpeed: 0
-    rotationSmoothTime: 0
-    speedChangeRate: 0
-    speed: 0
-    targetRotation: 0
-    rotationVelocity: 0
-    targetSpeed: 0
-  jumps:
-    jumpHeight: 0
-    gravity: 0
-    jumpTimeout: 0
-    fallTimeout: 0
-    verticalVelocity: 0
-    terminalVelocity: 0
-    jumpTimeoutDelta: 0
-    fallTimeoutDelta: 0
-  grounds:
-    grounded: 0
-    groundedOffset: 0
-    groundedRadius: 0
-    groundLayers:
-      serializedVersion: 2
-      m_Bits: 1
-  cameras:
-    cinemachineCameraTarget: {fileID: 0}
-    topClamp: 0
-    bottomClamp: 0
-    cameraAngleOverride: 0
-    lockCameraPosition: 0
-    cinemachineTargetYaw: 0
-    cinemachineTargetPitch: 0
-  audios:
-    landingAudioClip: {fileID: 0}
-    footstepAudioClips: []
-    footstepAudioVolume: 0
-  animators:
-    blendedValue: 0
-    speedParam: 0
-    isGroundedBool: 0
-    jumpBool: 0
-    freeFallBool: 0
-    motionSpeedParam: 0
 --- !u!136 &4934205248345412642
 CapsuleCollider:
   m_ObjectHideFlags: 0
