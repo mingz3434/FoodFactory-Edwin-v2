@@ -2,9 +2,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 using Mirror;
-using UnityEditor.Animations;
-using UnityEngine.SocialPlatforms;
+using _ = GameInstance;
 
+//!!! Bind grounds.groundLayers, cameras.cinemachineCameraTarget, audios.landingAudioClip, audios.footstepAudioClips in Inspector
+//!!! groundLayers to "Default" and cct to "CameraRoot" plssssssss!!!
+
+[RequireComponent(typeof(PlayerInput))]
 public class ThirdPerson_PC : NetworkBehaviour {
 
    [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f, speedChangeRate = 10f; [ReadOnly] public float speed, targetRotation, rotationVelocity, targetSpeed; }
@@ -12,7 +15,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
    [Serializable] public class GroundSettings { public bool bIsGrounded = true; public float groundedOffset = -.14f, groundedRadius = .28f; public LayerMask groundLayers; }
    [Serializable] public class CameraSettings { public GameObject cinemachineCameraTarget; public float topClamp = 70f, bottomClamp = -30f, cameraAngleOverride = 0f; public bool lockCameraPosition = false; [ReadOnly] public float cinemachineTargetYaw, cinemachineTargetPitch; }
    [Serializable] public class AudioSettings { public AudioClip landingAudioClip; public AudioClip[] footstepAudioClips; public float footstepAudioVolume = .5f; }
-   [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; }
+   [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; public bool bLoco, bJumping; }
+   [Serializable] public class InputValues { public bool bLocal; public Vector2 move, look; public bool bSprint; }
 
    public enum AnimationState { Locomotion, Jumping, Punching }
    public AnimationState animationState = AnimationState.Locomotion;
@@ -24,19 +28,67 @@ public class ThirdPerson_PC : NetworkBehaviour {
    public AudioSettings audios;
    public AnimSettings _a;
 
-   public PlayerInput playerInput;
+   PlayerInput playerInput;
+   public InputValues iv = new InputValues();
+   public Material blackMat;
+
    public Animator animator;
    public CharacterController characterController;
-   public InputActionsHandler input;
    public GameObject mainCamera;
+   public GameObject followCamScript;
+   public GameObject character;
+   public GameObject characterMesh_GO;
+
 
    private const float THRESHOLD = 0.01f;
 
-   //!!! Bind grounds.groundLayers, cameras.cinemachineCameraTarget, audios.landingAudioClip, audios.footstepAudioClips in Inspector
-   //!!! groundLayers to "Default" and cct to "CameraRoot" plssssssss!!!
+   public System.Random random = new System.Random();
 
+
+
+   #region Input region
+   void Awake(){ }
+
+
+   void OnEnable() {
+      playerInput.actions["Jump"].started += OnJump_KeyDown;
+      playerInput.actions["Sprint"].started += OnSprint_KeyDown;
+      playerInput.actions["Sprint"].canceled += OnSprint_KeyUp;
+   }
+
+   void OnDisable() {
+      playerInput.actions["Jump"].started -= OnJump_KeyDown;
+      playerInput.actions["Sprint"].started -= OnSprint_KeyDown;
+      playerInput.actions["Sprint"].canceled -= OnSprint_KeyUp;
+   }
+
+   public void OnMove(InputAction.CallbackContext context){ iv.move = context.ReadValue<Vector2>(); }
+   public void OnLook(InputAction.CallbackContext context){ iv.look = context.ReadValue<Vector2>(); }
+   void OnJump_KeyDown(InputAction.CallbackContext context){ Jump(); } //! Go Jump, no bool is need
+   void OnSprint_KeyDown(InputAction.CallbackContext context){ iv.bSprint = true; }
+   void OnSprint_KeyUp(InputAction.CallbackContext context){ iv.bSprint = false; }
+
+
+   #endregion
 
    private void Start() {
+      playerInput = GetComponent<PlayerInput>();
+
+      // Non-local player, destroy the PlayerInput component and disable the main camera
+      if (!isLocalPlayer){
+        if (playerInput) { Timer.CreateTimer_NoPhysics(this.gameObject, .1f , ()=>Destroy(playerInput) ); }
+        mainCamera.SetActive(false);
+        return;
+      }
+
+      // Local player, check the existence of the PlayerInput then enable it.
+      if (!playerInput) { Debug.LogError("PlayerInput component not found on local player!"); return; }
+      playerInput.enabled = true;
+
+      // iv local for inspector to view, set black for visually showing the local player.
+      iv.bLocal = true;
+      characterMesh_GO.GetComponent<SkinnedMeshRenderer>().material = blackMat;
+      
       grounds.groundLayers = LayerMask.GetMask("Default");
       cameras.cinemachineTargetYaw = cameras.cinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
@@ -46,59 +98,57 @@ public class ThirdPerson_PC : NetworkBehaviour {
       jumps.fallTimeoutDelta = jumps.fallTimeout;
    }
 
+
+
    private void AssignAnimatorHashIds() {
       _a.speed_Id = Animator.StringToHash("Speed");
       _a.loco_Id = Animator.StringToHash("Loco");
       _a.jumping_Id = Animator.StringToHash("Jumping");
-      // _a.punching_Id = Animator.StringToHash("Punching");
    }
 
    void Update(){
+
+
+      if(!isLocalPlayer) return;
       AnimatorParamToLocal();
 
-      OnMove_(input.move);
-      if (bSprintPressing) { OnSprintPressing_(); } else { OnSprintReleasing_(); }
+      Move(iv.move);
 
       LocalParamToAnimator();
    }
 
-   void AnimatorParamToLocal() {
-      // var speed = Mathf.Abs(_a.speed_Id); (no need)
-      var bLoco = animator.GetBool(_a.loco_Id);
-      var bJumping = animator.GetBool(_a.jumping_Id);
-
+   void AnimatorParamToLocal() { // No need translate speed to local
+      _a.bLoco = animator.GetBool(_a.loco_Id);
+      _a.bJumping = animator.GetBool(_a.jumping_Id);
    }
 
    void LocalParamToAnimator() {
       var speed = movements.speed;
       var bLoco = animationState == AnimationState.Locomotion;
       var bJumping = animationState == AnimationState.Jumping;
-      // var bPunching = animationState == AnimationState.Punching;
       animator.SetFloat(_a.speed_Id, speed);
       animator.SetBool(_a.loco_Id, bLoco);
       animator.SetBool(_a.jumping_Id, bJumping);
-      // animator.SetBool(_a.punching_Id, bPunching);
 
    }
 
-   bool bSprintPressing = false;
-   public void OnSprintPressing_(){ bSprintPressing = true; }
-   public void OnSprintReleasing_(){ bSprintPressing = false; }
-   public void OnJump_() {
+   public void Jump() {
       var bLoco = animationState == AnimationState.Locomotion;
       if(bLoco) {
          animationState = AnimationState.Jumping;
          if(!B_AnimClipFinished(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
          Timer.CreateTimer_NoPhysics(this.gameObject, .9f, () => { animationState = AnimationState.Locomotion; });
       }
-
    }
 
-   public void OnMove_(Vector2 inputVector) {
+   public void Move(Vector2 v) { //! Complex
 
+      Debug.Log("Move");
+      transform.Translate(v.x*.05f, 0, v.y*.05f);
+      return;
       void calculateTargetSpeed() {
-         float targetSpeed = bSprintPressing ? movements.sprintSpeed : movements.moveSpeed;
-         if (inputVector == Vector2.zero) targetSpeed = 0.0f;
+         float targetSpeed = iv.bSprint ? movements.sprintSpeed : movements.moveSpeed;
+         if (v == Vector2.zero) targetSpeed = 0.0f;
          movements.targetSpeed = targetSpeed;
       }
 
@@ -122,15 +172,15 @@ public class ThirdPerson_PC : NetworkBehaviour {
       }
 
       void calculateTargetRotation() {
-         Vector3 inputDirection = new Vector3(inputVector.x, 0.0f, inputVector.y).normalized;
+         Vector3 inputDirection = new Vector3(v.x, 0.0f, v.y).normalized;
 
-         if (inputVector != Vector2.zero) {
+         if (v != Vector2.zero) {
             movements.targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                mainCamera.transform.eulerAngles.y;
-            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, movements.targetRotation, ref movements.rotationVelocity,
+            float rotation = Mathf.SmoothDampAngle(character.transform.eulerAngles.y, movements.targetRotation, ref movements.rotationVelocity,
                movements.rotationSmoothTime);
 
-            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            character.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
          }
       }
 
@@ -158,7 +208,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
       //!!!!!!!!!!!!!!!!!!!!!!!
       var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
 
-      //varis anim by speed sth like that.
+      //varies anim by speed sth like that.
       if(movements.speed > 0.1f) {
          if (!B_AnimClipFinished(animatorInfo, "Move_1")) animator.Play("Move_1");
       }
@@ -166,13 +216,13 @@ public class ThirdPerson_PC : NetworkBehaviour {
          if (!B_AnimClipFinished(animatorInfo, "Idle_1")) animator.Play("Idle_1");
       }
 
-   }
+   } 
 
 
 
 
 
-   void OnLook_(Vector2 inputVector) {
+   void Look(Vector2 inputVector) {
       if (inputVector.sqrMagnitude >= THRESHOLD && !cameras.lockCameraPosition) {
          float deltaTimeMultiplier = 1.0f;
 
@@ -186,8 +236,10 @@ public class ThirdPerson_PC : NetworkBehaviour {
       cameras.cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cameras.cinemachineTargetPitch + cameras.cameraAngleOverride,
          cameras.cinemachineTargetYaw, 0.0f);
    }
+
    void LateUpdate(){
-      OnLook_(input.look);
+      if(!isLocalPlayer) return;
+      Look(iv.look);
    }
 
    // ******* EXTRAS BELOW ********
@@ -202,21 +254,21 @@ public class ThirdPerson_PC : NetworkBehaviour {
       Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
       Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
       Gizmos.color = grounds.bIsGrounded ? transparentGreen : transparentRed;
-      Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - grounds.groundedOffset, transform.position.z), grounds.groundedRadius);
+      Gizmos.DrawSphere(new Vector3(character.transform.position.x, character.transform.position.y - grounds.groundedOffset, character.transform.position.z), grounds.groundedRadius);
    }
 
    private void OnFootstep(AnimationEvent animationEvent) {
       if (animationEvent.animatorClipInfo.weight > 0.5f) {
          if (audios.footstepAudioClips.Length > 0) {
             var index = UnityEngine.Random.Range(0, audios.footstepAudioClips.Length);
-            AudioSource.PlayClipAtPoint(audios.footstepAudioClips[index], transform.TransformPoint(characterController.center), audios.footstepAudioVolume);
+            AudioSource.PlayClipAtPoint(audios.footstepAudioClips[index], character.transform.TransformPoint(characterController.center), audios.footstepAudioVolume);
          }
       }
    }
 
    private void OnLand(AnimationEvent animationEvent) {
       if (animationEvent.animatorClipInfo.weight > 0.5f) {
-         AudioSource.PlayClipAtPoint(audios.landingAudioClip, transform.TransformPoint(characterController.center), audios.footstepAudioVolume);
+         AudioSource.PlayClipAtPoint(audios.landingAudioClip, character.transform.TransformPoint(characterController.center), audios.footstepAudioVolume);
       }
    }
 
@@ -224,3 +276,43 @@ public class ThirdPerson_PC : NetworkBehaviour {
       return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+   // void Preprocessing(){
+   //    void disableNonLocalPlayerComponents(){
+   //       if(!isLocalPlayer){
+   //          this.gameObject.name = "RemotePlayer";
+   //          character.name = "RemoteCharacter";
+   //          Destroy(playerInput);
+   //          Destroy(input);
+   //          Destroy(mainCamera);
+   //          Destroy(followCamScript);
+   //       }
+   //    }
+
+   //    void unparentCharacter(){
+   //       character.transform.SetParent(this.transform.parent);
+   //    }
+   //    void unparentSelf(){
+   //       this.transform.SetParent(null);
+   //    }
+
+   //    void activateUnsurePlayerInput(){
+   //       if(isLocalPlayer) playerInput.ActivateInput();
+   //    }
+
+   //    disableNonLocalPlayerComponents();
+   //    unparentCharacter();
+   //    unparentSelf();
+   //    activateUnsurePlayerInput();
+   // }
