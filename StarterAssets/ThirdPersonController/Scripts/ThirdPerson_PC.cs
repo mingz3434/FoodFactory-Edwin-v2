@@ -7,9 +7,12 @@ using _ = GameInstance;
 //!!! Bind grounds.groundLayers, cameras.cinemachineCameraTarget, audios.landingAudioClip, audios.footstepAudioClips in Inspector
 //!!! groundLayers to "Default" and cct to "CameraRoot" plssssssss!!!
 
-[RequireComponent(typeof(PlayerInput))]
 public class ThirdPerson_PC : NetworkBehaviour {
 
+   [SyncVar(hook = nameof(OnPlayerIdChanged))] public int playerId = -1; void OnPlayerIdChanged(int oldId, int newId) { Cmd_SyncIdUpdate(newId); }
+   [Command] public void Cmd_SyncIdUpdate(int newId){ Rpc_SyncIdUpdate(newId); } [ClientRpc] public void Rpc_SyncIdUpdate(int newId){ headFlag_SR.sprite = playerIcons_Sprite[newId]; this.gameObject.name = $"P{newId+1}_Controller"; smr_Body.material = playerCharacters_Material[newId]; mr_LeftWeapon.material = playerCharacters_Material[newId]; mr_RightWeapon.material = playerCharacters_Material[newId]; }
+   public Sprite[] playerIcons_Sprite; public SpriteRenderer headFlag_SR;
+   public Material[] playerCharacters_Material; public SkinnedMeshRenderer smr_Body; public MeshRenderer mr_LeftWeapon, mr_RightWeapon;
    [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f, speedChangeRate = 10f; [ReadOnly] public float speed, targetRotation, rotationVelocity, targetSpeed; }
    [Serializable] public class JumpSettings { public float jumpHeight = 1.2f, gravity = -15f, jumpTimeout = .5f, fallTimeout = .15f; [ReadOnly] public float verticalVelocity, terminalVelocity, jumpTimeoutDelta, fallTimeoutDelta; }
    [Serializable] public class GroundSettings { public bool bIsGrounded = true; public float groundedOffset = -.14f, groundedRadius = .28f; public LayerMask groundLayers; }
@@ -30,7 +33,6 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    PlayerInput playerInput;
    public InputValues iv = new InputValues();
-   public Material blackMat;
 
    public Animator animator;
    public CharacterController characterController;
@@ -49,17 +51,21 @@ public class ThirdPerson_PC : NetworkBehaviour {
    #region Input region
    void Awake(){ }
 
-
-   void OnEnable() {
-      playerInput.actions["Jump"].started += OnJump_KeyDown;
-      playerInput.actions["Sprint"].started += OnSprint_KeyDown;
-      playerInput.actions["Sprint"].canceled += OnSprint_KeyUp;
+   void LateEnable() { OnLateEnable(); }
+   void OnLateEnable() {
+      if(playerInput){
+         playerInput.actions["Jump"].started += OnJump_KeyDown;
+         playerInput.actions["Sprint"].started += OnSprint_KeyDown;
+         playerInput.actions["Sprint"].canceled += OnSprint_KeyUp;
+      }
    }
 
    void OnDisable() {
-      playerInput.actions["Jump"].started -= OnJump_KeyDown;
-      playerInput.actions["Sprint"].started -= OnSprint_KeyDown;
-      playerInput.actions["Sprint"].canceled -= OnSprint_KeyUp;
+      if(playerInput){         
+         playerInput.actions["Jump"].started -= OnJump_KeyDown;
+         playerInput.actions["Sprint"].started -= OnSprint_KeyDown;
+         playerInput.actions["Sprint"].canceled -= OnSprint_KeyUp;
+      }
    }
 
    public void OnMove(InputAction.CallbackContext context){ iv.move = context.ReadValue<Vector2>(); }
@@ -76,18 +82,18 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
       // Non-local player, destroy the PlayerInput component and disable the main camera
       if (!isLocalPlayer){
-        if (playerInput) { Timer.CreateTimer_NoPhysics(this.gameObject, .1f , ()=>Destroy(playerInput) ); }
-        mainCamera.SetActive(false);
-        return;
+         if (playerInput) { Destroy(playerInput); }
+         if (mainCamera) { Destroy(mainCamera); }
+         if (followCamScript) { Destroy(followCamScript); }
+         return;
       }
 
       // Local player, check the existence of the PlayerInput then enable it.
       if (!playerInput) { Debug.LogError("PlayerInput component not found on local player!"); return; }
       playerInput.enabled = true;
 
-      // iv local for inspector to view, set black for visually showing the local player.
+      // iv local for inspector to view.
       iv.bLocal = true;
-      characterMesh_GO.GetComponent<SkinnedMeshRenderer>().material = blackMat;
       
       grounds.groundLayers = LayerMask.GetMask("Default");
       cameras.cinemachineTargetYaw = cameras.cinemachineCameraTarget.transform.rotation.eulerAngles.y;
@@ -96,6 +102,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
       jumps.jumpTimeoutDelta = jumps.jumpTimeout;
       jumps.fallTimeoutDelta = jumps.fallTimeout;
+
+      LateEnable();
    }
 
 
@@ -107,15 +115,19 @@ public class ThirdPerson_PC : NetworkBehaviour {
    }
 
    void Update(){
-
-
       if(!isLocalPlayer) return;
+
       AnimatorParamToLocal();
 
       Move(iv.move);
 
       LocalParamToAnimator();
+
+      
+
    }
+
+
 
    void AnimatorParamToLocal() { // No need translate speed to local
       _a.bLoco = animator.GetBool(_a.loco_Id);
@@ -143,9 +155,6 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    public void Move(Vector2 v) { //! Complex
 
-      Debug.Log("Move");
-      transform.Translate(v.x*.05f, 0, v.y*.05f);
-      return;
       void calculateTargetSpeed() {
          float targetSpeed = iv.bSprint ? movements.sprintSpeed : movements.moveSpeed;
          if (v == Vector2.zero) targetSpeed = 0.0f;
@@ -222,12 +231,12 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
 
 
-   void Look(Vector2 inputVector) {
-      if (inputVector.sqrMagnitude >= THRESHOLD && !cameras.lockCameraPosition) {
+   void Look(Vector2 v) {
+      if (v.sqrMagnitude >= THRESHOLD && !cameras.lockCameraPosition) {
          float deltaTimeMultiplier = 1.0f;
 
-         cameras.cinemachineTargetYaw += inputVector.x * deltaTimeMultiplier;
-         cameras.cinemachineTargetPitch += inputVector.y * deltaTimeMultiplier;
+         cameras.cinemachineTargetYaw += v.x * deltaTimeMultiplier;
+         cameras.cinemachineTargetPitch += v.y * deltaTimeMultiplier;
       }
 
       cameras.cinemachineTargetYaw = ClampAngle(cameras.cinemachineTargetYaw, float.MinValue, float.MaxValue);
@@ -237,9 +246,30 @@ public class ThirdPerson_PC : NetworkBehaviour {
          cameras.cinemachineTargetYaw, 0.0f);
    }
 
+   void LateUpdateHeadFlag_Local(){
+      var directionToCamera = mainCamera.transform.position - headFlag_SR.transform.position;
+      directionToCamera.y = 0;
+      if(directionToCamera.sqrMagnitude>.01f){
+         var targetRotation = Quaternion.LookRotation(directionToCamera);
+         targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y + 180, 0);
+         headFlag_SR.transform.rotation = targetRotation;
+      }
+   }
+
+   void LateUpdateHeadFlag_NonLocal(){
+      var directionToCamera = Camera.main.transform.position - headFlag_SR.transform.position;
+      directionToCamera.y = 0;
+      if(directionToCamera.sqrMagnitude>.01f){
+         var targetRotation = Quaternion.LookRotation(directionToCamera);
+         targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y + 180, 0);
+         headFlag_SR.transform.rotation = targetRotation;
+      }
+   }
+
    void LateUpdate(){
-      if(!isLocalPlayer) return;
+      if (!isLocalPlayer) { LateUpdateHeadFlag_NonLocal(); return; }
       Look(iv.look);
+      LateUpdateHeadFlag_Local();
    }
 
    // ******* EXTRAS BELOW ********
@@ -276,43 +306,3 @@ public class ThirdPerson_PC : NetworkBehaviour {
       return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-   // void Preprocessing(){
-   //    void disableNonLocalPlayerComponents(){
-   //       if(!isLocalPlayer){
-   //          this.gameObject.name = "RemotePlayer";
-   //          character.name = "RemoteCharacter";
-   //          Destroy(playerInput);
-   //          Destroy(input);
-   //          Destroy(mainCamera);
-   //          Destroy(followCamScript);
-   //       }
-   //    }
-
-   //    void unparentCharacter(){
-   //       character.transform.SetParent(this.transform.parent);
-   //    }
-   //    void unparentSelf(){
-   //       this.transform.SetParent(null);
-   //    }
-
-   //    void activateUnsurePlayerInput(){
-   //       if(isLocalPlayer) playerInput.ActivateInput();
-   //    }
-
-   //    disableNonLocalPlayerComponents();
-   //    unparentCharacter();
-   //    unparentSelf();
-   //    activateUnsurePlayerInput();
-   // }
