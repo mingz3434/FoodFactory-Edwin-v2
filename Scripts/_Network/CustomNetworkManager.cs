@@ -18,16 +18,13 @@ public class CustomNetworkManager : NetworkManager {
       Debug.Log("Mirror: Server scene changed.");  
    }
 
-   private static int nextPlayerId = 0;
-
    public override void OnServerAddPlayer(NetworkConnectionToClient newConnection){
       base.OnServerAddPlayer(newConnection);
 
       if (newConnection.identity != null){
          ThirdPerson_PC playerScript = newConnection.identity.GetComponent<ThirdPerson_PC>();
          if (playerScript != null){
-               playerScript.playerId = nextPlayerId;
-               nextPlayerId++;
+               playerScript.playerId = newConnection.connectionId;
                Debug.Log($"已為連接 {newConnection.connectionId} 分配玩家 ID: {playerScript.playerId}");
          }
       }

@@ -9,13 +9,15 @@ using _ = GameInstance;
 
 public class ThirdPerson_PC : NetworkBehaviour {
 
-   [SyncVar(hook = nameof(OnPlayerIdChanged))] public int playerId = -1; void OnPlayerIdChanged(int oldId, int newId) { Cmd_SyncIdUpdate(newId); }
-   [Command] public void Cmd_SyncIdUpdate(int newId){ Rpc_SyncIdUpdate(newId); } [ClientRpc] public void Rpc_SyncIdUpdate(int newId){ headFlag_SR.sprite = playerIcons_Sprite[newId]; this.gameObject.name = $"P{newId+1}_Controller"; smr_Body.material = playerCharacters_Material[newId]; mr_LeftWeapon.material = playerCharacters_Material[newId]; mr_RightWeapon.material = playerCharacters_Material[newId]; }
+   [SyncVar] public int playerId = -1;
    public Sprite[] playerIcons_Sprite; public SpriteRenderer headFlag_SR;
    public Material[] playerCharacters_Material; public SkinnedMeshRenderer smr_Body; public MeshRenderer mr_LeftWeapon, mr_RightWeapon;
    [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f, speedChangeRate = 10f; [ReadOnly] public float speed, targetRotation, rotationVelocity, targetSpeed; }
-   [Serializable] public class JumpSettings { public float jumpHeight = 1.2f, gravity = -15f, jumpTimeout = .5f, fallTimeout = .15f; [ReadOnly] public float verticalVelocity, terminalVelocity, jumpTimeoutDelta, fallTimeoutDelta; }
-   [Serializable] public class GroundSettings { public bool bIsGrounded = true; public float groundedOffset = -.14f, groundedRadius = .28f; public LayerMask groundLayers; }
+   [Serializable] public class CC_Cust_JumpSettings { public float JUMP_HEIGHT = 1.2f, GRAVITY = -15f, JUMP_TIMEOUT = .5f, FALL_TIMEOUT = .15f, TERMINAL_VELOCITY = -50f; public Transform characterFootTransform; public LayerMask GROUND_LAYER; [ReadOnly] public float verticalVelocity; [ReadOnly] public bool bIsGrounded, bIsJumping; }
+
+
+
+
    [Serializable] public class CameraSettings { public GameObject cinemachineCameraTarget; public float topClamp = 70f, bottomClamp = -30f, cameraAngleOverride = 0f; public bool lockCameraPosition = false; [ReadOnly] public float cinemachineTargetYaw, cinemachineTargetPitch; }
    [Serializable] public class AudioSettings { public AudioClip landingAudioClip; public AudioClip[] footstepAudioClips; public float footstepAudioVolume = .5f; }
    [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; public bool bLoco, bJumping; }
@@ -25,8 +27,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
    public AnimationState animationState = AnimationState.Locomotion;
 
    public MovementSettings movements;
-   public JumpSettings jumps;
-   public GroundSettings grounds;
+   public CC_Cust_JumpSettings _j;
    public CameraSettings cameras;
    public AudioSettings audios;
    public AnimSettings _a;
@@ -78,6 +79,16 @@ public class ThirdPerson_PC : NetworkBehaviour {
    #endregion
 
    private void Start() {
+
+      void SyncIdInit(){
+         headFlag_SR.sprite = playerIcons_Sprite[playerId];
+         this.gameObject.name = $"P{playerId+1}_Controller";
+         smr_Body.material = playerCharacters_Material[playerId];
+         mr_LeftWeapon.material = playerCharacters_Material[playerId];
+         mr_RightWeapon.material = playerCharacters_Material[playerId];
+      }
+      SyncIdInit();
+
       playerInput = GetComponent<PlayerInput>();
 
       // Non-local player, destroy the PlayerInput component and disable the main camera
@@ -95,15 +106,12 @@ public class ThirdPerson_PC : NetworkBehaviour {
       // iv local for inspector to view.
       iv.bLocal = true;
       
-      grounds.groundLayers = LayerMask.GetMask("Default");
       cameras.cinemachineTargetYaw = cameras.cinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
       AssignAnimatorHashIds();
 
-      jumps.jumpTimeoutDelta = jumps.jumpTimeout;
-      jumps.fallTimeoutDelta = jumps.fallTimeout;
-
       LateEnable();
+
    }
 
 
@@ -117,17 +125,29 @@ public class ThirdPerson_PC : NetworkBehaviour {
    void Update(){
       if(!isLocalPlayer) return;
 
+
+
       AnimatorParamToLocal();
 
+      FallByGravity(); 
       Move(iv.move);
+
 
       LocalParamToAnimator();
 
       
 
+
    }
 
-
+   void FixedUpdate(){
+      var bIsGrounded = Physics.CheckSphere(_j.characterFootTransform.position, 0.28f, _j.GROUND_LAYER, QueryTriggerInteraction.Ignore); 
+      // Debug.Log(bIsGrounded ? "Grounded" : "Not Grounded");
+   }
+   void FallByGravity(){
+      if(_j.bIsGrounded) return;
+      _j.verticalVelocity = -5f;
+   }
 
    void AnimatorParamToLocal() { // No need translate speed to local
       _a.bLoco = animator.GetBool(_a.loco_Id);
@@ -146,14 +166,20 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    public void Jump() {
       var bLoco = animationState == AnimationState.Locomotion;
-      if(bLoco) {
+      if(bLoco) { //playing loco and is grounded
          animationState = AnimationState.Jumping;
+
          if(!B_AnimClipFinished(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
+
+         
+
          Timer.CreateTimer_NoPhysics(this.gameObject, .9f, () => { animationState = AnimationState.Locomotion; });
       }
    }
 
    public void Move(Vector2 v) { //! Complex
+
+
 
       void calculateTargetSpeed() {
          float targetSpeed = iv.bSprint ? movements.sprintSpeed : movements.moveSpeed;
@@ -193,13 +219,13 @@ public class ThirdPerson_PC : NetworkBehaviour {
          }
       }
 
-      void applyMovementAndRotation() {
+      void applyMovementAndRotation() {var ship = GameObject.Find("Ship").transform.position;
          Vector3 targetDirection = Quaternion.Euler(0.0f, movements.targetRotation, 0.0f) * Vector3.forward;
 
          characterController.Move(targetDirection.normalized * (movements.speed * Time.deltaTime) +
-            new Vector3(0.0f, jumps.verticalVelocity, 0.0f) * Time.deltaTime);
-      }
+            new Vector3(0.0f, _j.verticalVelocity, 0.0f) * Time.deltaTime) ;
 
+      }
 
 
       calculateTargetSpeed();
@@ -280,11 +306,9 @@ public class ThirdPerson_PC : NetworkBehaviour {
       return Mathf.Clamp(lfAngle, lfMin, lfMax);
    }
 
-   private void OnDrawGizmosSelected() {
-      Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
-      Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
-      Gizmos.color = grounds.bIsGrounded ? transparentGreen : transparentRed;
-      Gizmos.DrawSphere(new Vector3(character.transform.position.x, character.transform.position.y - grounds.groundedOffset, character.transform.position.z), grounds.groundedRadius);
+   void OnDrawGizmos(){
+      Gizmos.color = Color.red;
+      Gizmos.DrawWireSphere(_j.characterFootTransform.position, .28f);
    }
 
    private void OnFootstep(AnimationEvent animationEvent) {
