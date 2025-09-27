@@ -47,8 +47,6 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    public System.Random random = new System.Random();
 
-
-
    #region Input region
    void Awake(){ }
 
@@ -129,7 +127,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
       AnimatorParamToLocal();
 
-      FallByGravity(); 
+      // FallByGravity(); 
       Move(iv.move);
 
 
@@ -179,8 +177,6 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    public void Move(Vector2 v) { //! Complex
 
-
-
       void calculateTargetSpeed() {
          float targetSpeed = iv.bSprint ? movements.sprintSpeed : movements.moveSpeed;
          if (v == Vector2.zero) targetSpeed = 0.0f;
@@ -219,19 +215,21 @@ public class ThirdPerson_PC : NetworkBehaviour {
          }
       }
 
-      void applyMovementAndRotation() {var ship = GameObject.Find("Ship").transform.position;
+      void applyMovementAndRotation() {
          Vector3 targetDirection = Quaternion.Euler(0.0f, movements.targetRotation, 0.0f) * Vector3.forward;
-
          characterController.Move(targetDirection.normalized * (movements.speed * Time.deltaTime) +
-            new Vector3(0.0f, _j.verticalVelocity, 0.0f) * Time.deltaTime) ;
+            new Vector3(0f, _j.verticalVelocity, 0f) * Time.deltaTime);
 
       }
+
 
 
       calculateTargetSpeed();
       smoothSpeedChange();
       calculateTargetRotation();
       applyMovementAndRotation();
+
+      
 
 
       // Anim
