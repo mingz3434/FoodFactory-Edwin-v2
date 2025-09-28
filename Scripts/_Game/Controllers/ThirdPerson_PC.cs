@@ -12,7 +12,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
    [SyncVar] public int playerId = -1;
    public Sprite[] playerIcons_Sprite; public SpriteRenderer headFlag_SR;
    public Material[] playerCharacters_Material; public SkinnedMeshRenderer smr_Body; public MeshRenderer mr_LeftWeapon, mr_RightWeapon;
-   [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f, speedChangeRate = 10f; [ReadOnly] public float speed, targetRotation, rotationVelocity, targetSpeed; }
+   [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f; [ReadOnly] public float rotationVelocity; }
    [Serializable] public class CC_Cust_JumpSettings { public float JUMP_HEIGHT = 1.2f, GRAVITY = -15f, JUMP_TIMEOUT = .5f, FALL_TIMEOUT = .15f, TERMINAL_VELOCITY = -50f; public Transform characterFootTransform; public LayerMask GROUND_LAYER; [ReadOnly] public float verticalVelocity; [ReadOnly] public bool bIsGrounded, bIsJumping; }
 
 
@@ -76,7 +76,18 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    #endregion
 
-   private void Start() {
+   void Start() {
+      playerInput = GetComponent<PlayerInput>();
+
+      // Local player check.
+      if (isLocalPlayer && !playerInput) { Debug.LogError("PlayerInput component not found on local player! Following scripts not going to run..."); return; }
+
+      // Non-local player, destroy the PlayerInput component and disable the main camera
+      if (!isLocalPlayer){
+         if (playerInput) { Destroy(playerInput); }
+         if (mainCamera) { Destroy(mainCamera); }
+         if (followCamScript) { Destroy(followCamScript); }
+      }
 
       void SyncIdInit(){
          headFlag_SR.sprite = playerIcons_Sprite[playerId];
@@ -85,21 +96,13 @@ public class ThirdPerson_PC : NetworkBehaviour {
          mr_LeftWeapon.material = playerCharacters_Material[playerId];
          mr_RightWeapon.material = playerCharacters_Material[playerId];
       }
-      SyncIdInit();
 
-      playerInput = GetComponent<PlayerInput>();
+      Timer.CreateTimer_NoPhysics(this.gameObject, .1f, () => {
+         SyncIdInit();
+         playerInput.enabled = true;
+      });
 
-      // Non-local player, destroy the PlayerInput component and disable the main camera
-      if (!isLocalPlayer){
-         if (playerInput) { Destroy(playerInput); }
-         if (mainCamera) { Destroy(mainCamera); }
-         if (followCamScript) { Destroy(followCamScript); }
-         return;
-      }
 
-      // Local player, check the existence of the PlayerInput then enable it.
-      if (!playerInput) { Debug.LogError("PlayerInput component not found on local player!"); return; }
-      playerInput.enabled = true;
 
       // iv local for inspector to view.
       iv.bLocal = true;
@@ -145,10 +148,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
    }
 
    void LocalParamToAnimator() {
-      var speed = movements.speed;
       var bLoco = animationState == AnimationState.Locomotion;
       var bJumping = animationState == AnimationState.Jumping;
-      animator.SetFloat(_a.speed_Id, speed);
       animator.SetBool(_a.loco_Id, bLoco);
       animator.SetBool(_a.jumping_Id, bJumping);
 
@@ -159,7 +160,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
       if(bLoco) { //playing loco and is grounded
          animationState = AnimationState.Jumping;
 
-         if(!B_AnimClipFinished(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
+         if(!B_AlreadyPlayingDesiredAnimClip(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
 
          
 
@@ -168,37 +169,33 @@ public class ThirdPerson_PC : NetworkBehaviour {
    }
 
    public void Move(Vector2 input) { //! Complex
+      Physics.Raycast(_j.characterFootTransform.position, Vector3.down, out RaycastHit hit, .01f, _j.GROUND_LAYER, QueryTriggerInteraction.Ignore);
+
       float speedHorizontal = input == Vector2.zero ? 0f : iv.bSprint ? input.magnitude * movements.sprintSpeed : input.magnitude * movements.moveSpeed;
-      float speedVertical;
+      float speedVertical = hit.collider ? 0f : 5f;
       Vector3 velocityCombined;
       Vector3 inputDirection = new Vector3(input.x, 0.0f, input.y).normalized;
 
+      float targetRotation = 0f;
+      float smoothedRotation;
+      Vector3 targetDirection;
+
       void calculateTargetRotation() {
          if (speedHorizontal != 0f) {
-            movements.targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + mainCamera.transform.eulerAngles.y;
-            float rotation = Mathf.SmoothDampAngle(character.transform.eulerAngles.y, movements.targetRotation, ref movements.rotationVelocity,
-               movements.rotationSmoothTime);
-
-            character.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + mainCamera.transform.eulerAngles.y;
+            smoothedRotation = Mathf.SmoothDampAngle(character.transform.eulerAngles.y, targetRotation, ref movements.rotationVelocity, movements.rotationSmoothTime);
+            character.transform.rotation = Quaternion.Euler(0.0f, smoothedRotation, 0.0f);
          }
       }
 
       void applyMovementAndRotation() {
-         Physics.Raycast(_j.characterFootTransform.position, Vector3.down, out RaycastHit hit, .01f, _j.GROUND_LAYER, QueryTriggerInteraction.Ignore);
-
-         speedVertical = hit.collider ? 0f : 5f;
-         Vector3 targetDirection = Quaternion.Euler(0.0f, movements.targetRotation, 0.0f) * Vector3.forward;
+         targetDirection = Quaternion.Euler(0.0f, targetRotation, 0.0f) * Vector3.forward;
          velocityCombined = targetDirection.normalized * speedHorizontal + Vector3.down * speedVertical;
          characterController.Move(velocityCombined * Time.deltaTime);
       }
 
-
-
       calculateTargetRotation();
       applyMovementAndRotation();
-
-      
-
 
       // Anim
       var bJumping = animationState == AnimationState.Jumping;
@@ -210,11 +207,11 @@ public class ThirdPerson_PC : NetworkBehaviour {
       var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
 
       //varies anim by speed sth like that.
-      if(speedHorizontal > 0.1f) {
-         if (!B_AnimClipFinished(animatorInfo, "Move_1")) animator.Play("Move_1");
+      if(speedHorizontal > 0.1f && !B_AlreadyPlayingDesiredAnimClip(animatorInfo, "Move_1")) {
+         animator.Play("Move_1");
       }
-      else{
-         if (!B_AnimClipFinished(animatorInfo, "Idle_1")) animator.Play("Idle_1");
+      else if(!B_AlreadyPlayingDesiredAnimClip(animatorInfo, "Idle_1")){
+         animator.Play("Idle_1");
       }
 
    } 
@@ -287,7 +284,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
       }
    }
 
-   public bool B_AnimClipFinished(AnimatorStateInfo animatorStateInfo, string stateName){
+   public bool B_AlreadyPlayingDesiredAnimClip(AnimatorStateInfo animatorStateInfo, string stateName){
       return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
 }

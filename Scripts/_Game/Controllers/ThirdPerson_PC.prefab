@@ -99,9 +99,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebaf820fef747f849b32a9e570d22e43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 0
+  syncDirection: 1
   syncMode: 0
-  syncInterval: 0.02
+  syncInterval: 0.05
   playerId: -1
   playerIcons_Sprite:
   - {fileID: 21300000, guid: f086d958a9835264d97e3a9029fb6d4a, type: 3}
@@ -122,11 +122,7 @@ MonoBehaviour:
     moveSpeed: 4
     sprintSpeed: 5.355
     rotationSmoothTime: 0.12
-    speedChangeRate: 10
-    speed: 0
-    targetRotation: 0
     rotationVelocity: 0
-    targetSpeed: 0
   _j:
     JUMP_HEIGHT: 1.2
     GRAVITY: -15
@@ -290,7 +286,7 @@ MonoBehaviour:
   syncDirection: 1
   syncMode: 0
   syncInterval: 0.1
-  clientAuthority: 0
+  clientAuthority: 1
   animator: {fileID: 3051169148384818454}
 --- !u!1 &3051169148392097410
 GameObject:
@@ -1912,10 +1908,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Damping: {x: 0.1, y: 0.25, z: 0.3}
-  ShoulderOffset: {x: 1, y: 0, z: 0}
-  VerticalArmLength: 0
+  ShoulderOffset: {x: 0, y: 0, z: 0}
+  VerticalArmLength: 1
   CameraSide: 0.6
-  CameraDistance: 4
+  CameraDistance: 4.8
   CameraCollisionFilter:
     serializedVersion: 2
     m_Bits: 1
@@ -2037,8 +2033,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5112738750027064476}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.20000005, y: 4.6940002, z: -4}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 5.6940002, z: -4.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2207,7 +2203,7 @@ Transform:
   m_GameObject: {fileID: 5439205181016574479}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.20000005, y: 4.6940002, z: -4}
+  m_LocalPosition: {x: 0, y: 5.6940002, z: -4.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
