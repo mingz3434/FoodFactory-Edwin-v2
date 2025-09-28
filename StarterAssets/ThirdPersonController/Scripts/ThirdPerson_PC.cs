@@ -134,17 +134,9 @@ public class ThirdPerson_PC : NetworkBehaviour {
       LocalParamToAnimator();
 
       
+      
 
 
-   }
-
-   void FixedUpdate(){
-      var bIsGrounded = Physics.CheckSphere(_j.characterFootTransform.position, 0.28f, _j.GROUND_LAYER, QueryTriggerInteraction.Ignore); 
-      // Debug.Log(bIsGrounded ? "Grounded" : "Not Grounded");
-   }
-   void FallByGravity(){
-      if(_j.bIsGrounded) return;
-      _j.verticalVelocity = -5f;
    }
 
    void AnimatorParamToLocal() { // No need translate speed to local
@@ -175,39 +167,15 @@ public class ThirdPerson_PC : NetworkBehaviour {
       }
    }
 
-   public void Move(Vector2 v) { //! Complex
-
-      void calculateTargetSpeed() {
-         float targetSpeed = iv.bSprint ? movements.sprintSpeed : movements.moveSpeed;
-         if (v == Vector2.zero) targetSpeed = 0.0f;
-         movements.targetSpeed = targetSpeed;
-      }
-
-      void smoothSpeedChange() {
-         float currentHorizontalSpeed = new Vector3(characterController.velocity.x, 0.0f, characterController.velocity.z).magnitude;
-
-         float speedOffset = 0.1f;
-
-         if (currentHorizontalSpeed < movements.targetSpeed - speedOffset ||
-            currentHorizontalSpeed > movements.targetSpeed + speedOffset) {
-            movements.speed = Mathf.Lerp(currentHorizontalSpeed, movements.targetSpeed,
-               Time.deltaTime * movements.speedChangeRate);
-
-            movements.speed = Mathf.Round(movements.speed * 1000f) / 1000f;
-         } else {
-            movements.speed = movements.targetSpeed;
-         }
-
-         _a.blendedValue = Mathf.Lerp(_a.blendedValue, movements.targetSpeed, Time.deltaTime * movements.speedChangeRate);
-         if (_a.blendedValue < 0.01f) _a.blendedValue = 0f;
-      }
+   public void Move(Vector2 input) { //! Complex
+      float speedHorizontal = input == Vector2.zero ? 0f : iv.bSprint ? input.magnitude * movements.sprintSpeed : input.magnitude * movements.moveSpeed;
+      float speedVertical;
+      Vector3 velocityCombined;
+      Vector3 inputDirection = new Vector3(input.x, 0.0f, input.y).normalized;
 
       void calculateTargetRotation() {
-         Vector3 inputDirection = new Vector3(v.x, 0.0f, v.y).normalized;
-
-         if (v != Vector2.zero) {
-            movements.targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
-               mainCamera.transform.eulerAngles.y;
+         if (speedHorizontal != 0f) {
+            movements.targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + mainCamera.transform.eulerAngles.y;
             float rotation = Mathf.SmoothDampAngle(character.transform.eulerAngles.y, movements.targetRotation, ref movements.rotationVelocity,
                movements.rotationSmoothTime);
 
@@ -216,16 +184,16 @@ public class ThirdPerson_PC : NetworkBehaviour {
       }
 
       void applyMovementAndRotation() {
-         Vector3 targetDirection = Quaternion.Euler(0.0f, movements.targetRotation, 0.0f) * Vector3.forward;
-         characterController.Move(targetDirection.normalized * (movements.speed * Time.deltaTime) +
-            new Vector3(0f, _j.verticalVelocity, 0f) * Time.deltaTime);
+         Physics.Raycast(_j.characterFootTransform.position, Vector3.down, out RaycastHit hit, .01f, _j.GROUND_LAYER, QueryTriggerInteraction.Ignore);
 
+         speedVertical = hit.collider ? 0f : 5f;
+         Vector3 targetDirection = Quaternion.Euler(0.0f, movements.targetRotation, 0.0f) * Vector3.forward;
+         velocityCombined = targetDirection.normalized * speedHorizontal + Vector3.down * speedVertical;
+         characterController.Move(velocityCombined * Time.deltaTime);
       }
 
 
 
-      calculateTargetSpeed();
-      smoothSpeedChange();
       calculateTargetRotation();
       applyMovementAndRotation();
 
@@ -242,7 +210,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
       var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
 
       //varies anim by speed sth like that.
-      if(movements.speed > 0.1f) {
+      if(speedHorizontal > 0.1f) {
          if (!B_AnimClipFinished(animatorInfo, "Move_1")) animator.Play("Move_1");
       }
       else{
@@ -302,11 +270,6 @@ public class ThirdPerson_PC : NetworkBehaviour {
       if (lfAngle < -360f) lfAngle += 360f;
       if (lfAngle > 360f) lfAngle -= 360f;
       return Mathf.Clamp(lfAngle, lfMin, lfMax);
-   }
-
-   void OnDrawGizmos(){
-      Gizmos.color = Color.red;
-      Gizmos.DrawWireSphere(_j.characterFootTransform.position, .28f);
    }
 
    private void OnFootstep(AnimationEvent animationEvent) {

@@ -99,9 +99,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebaf820fef747f849b32a9e570d22e43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 1
+  syncDirection: 0
   syncMode: 0
-  syncInterval: 0.1
+  syncInterval: 0.02
   playerId: -1
   playerIcons_Sprite:
   - {fileID: 21300000, guid: f086d958a9835264d97e3a9029fb6d4a, type: 3}
@@ -290,7 +290,7 @@ MonoBehaviour:
   syncDirection: 1
   syncMode: 0
   syncInterval: 0.1
-  clientAuthority: 1
+  clientAuthority: 0
   animator: {fileID: 3051169148384818454}
 --- !u!1 &3051169148392097410
 GameObject:
@@ -618,7 +618,7 @@ GameObject:
   - component: {fileID: 3051169148392266428}
   - component: {fileID: 4962495117040732867}
   - component: {fileID: 3051169148384818454}
-  - component: {fileID: 6054267215996885599}
+  - component: {fileID: 8129820696406976947}
   m_Layer: 0
   m_Name: Player Character
   m_TagString: Untagged
@@ -693,7 +693,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6054267215996885599
+--- !u!114 &8129820696406976947
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -702,12 +702,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 3051169148392097438}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a553cb17010b2403e8523b558bffbc14, type: 3}
+  m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncDirection: 1
   syncMode: 0
-  syncInterval: 0.1
+  syncInterval: 0
   target: {fileID: 3051169148392266428}
   syncPosition: 1
   syncRotation: 1
@@ -716,17 +716,17 @@ MonoBehaviour:
   compressRotation: 1
   interpolatePosition: 1
   interpolateRotation: 1
-  interpolateScale: 0
+  interpolateScale: 1
   coordinateSpace: 0
   timelineOffset: 1
   showGizmos: 0
   showOverlay: 0
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
-  bufferResetMultiplier: 3
+  onlySyncOnChangeCorrectionMultiplier: 2
   useFixedUpdate: 0
-  positionSensitivity: 0.01
   rotationSensitivity: 0.01
-  scaleSensitivity: 0.01
+  positionPrecision: 0.01
+  scalePrecision: 0.01
 --- !u!1 &3051169148392097440
 GameObject:
   m_ObjectHideFlags: 0
@@ -2396,7 +2396,7 @@ Transform:
   m_GameObject: {fileID: 8332175437633100591}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
