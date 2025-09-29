@@ -50,9 +50,12 @@ public class ThirdPerson_PC : NetworkBehaviour {
    #region //! PART 2
    [Serializable] public class UserInterface { public HUD_Game hud_Inst; public Transform canvasTransform; }
    [Serializable] public class Extras { public Hook hook; public TrajectoryLine trajectoryLine; public Transform hookContainerTransform; }
-
+   [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
+   [Serializable] public struct Status{ public bool bIsDragging; public bool bProjectileRecastLocked; public Vector3 dragStartPosition; }
    public UserInterface ui;
    public Extras extras;
+   public TrajectorySettings trajs;
+   public Status status;
    #endregion
 
 
@@ -146,7 +149,9 @@ public class ThirdPerson_PC : NetworkBehaviour {
       LocalParamToAnimator();
 
       
-      
+      if (Input.GetMouseButtonDown(0)) { EnableTrajectory_StartDragging(); }
+
+      if (this.status.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
 
 
    }
@@ -296,4 +301,105 @@ public class ThirdPerson_PC : NetworkBehaviour {
    public bool B_AlreadyPlayingDesiredAnimClip(AnimatorStateInfo animatorStateInfo, string stateName){
       return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
+
+
+
+
+
+   #region //! PART 2
+void EnableTrajectory_StartDragging(){
+      if (this.status.bProjectileRecastLocked) return; // !!!!!!!!!!!!!!
+      this.status.bIsDragging = true;
+      this.status.dragStartPosition = Input.mousePosition; Debug.Log(Input.mousePosition);
+      this.extras.trajectoryLine.lineRenderer.enabled = true;
+   }
+
+
+
+   void TrajectoryLogics(){ //P: Including release mouse button logics
+
+      //// prefer become pointing back to real method cuz here is inside the update
+      //// but now will not do it cuz for better managing.
+
+      Action<Vector3, Vector3> updateDrawTrajectoryLine_LineRenderer = (startPos, velocityCombined) => {
+         var points = new Vector3[50];
+         for (int i = 0; i < 50; i++){ //P: hardcode 50 temporary
+            float time = i * .05f; //P: Est. each .05s timeframe as segment of trajectory
+            points[i] = startPos + velocityCombined * time + 0.5f * Physics.gravity * time * time;
+         }
+         this.extras.trajectoryLine.lineRenderer.SetPositions(points);
+      };
+
+      var velocityCombined = GetVelocityCombined_By_Calculating_DragDistance();
+
+      updateDrawTrajectoryLine_LineRenderer( GetFiringStartPosition(), velocityCombined );
+
+      //P: If release mouse left btn, fire.
+      if (Input.GetMouseButtonUp(0)){
+         this.status.bIsDragging = false;
+         this.extras.trajectoryLine.lineRenderer.enabled = false; // hide trajectory line
+         FireProjectile(velocityCombined);
+      }
+   }
+
+   void FireProjectile(Vector3 velocity){
+
+      // Fire first food when having food on hand.
+      // if (character.slotTransform.childCount > 0 ){
+         // this.status.bProjectileRecastLocked = true;
+         // var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
+         // var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
+         // rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
+         // Timer.CreateTimer_Physics(this.gameObject, 3f, () => this.status.bProjectileRecastLocked = false );
+      // }
+
+      // Fire a hook for getting something back.
+      // else{
+         var hook = this.extras.hook.gameObject; hook.transform.SetParent(null); this.status.bProjectileRecastLocked = true;
+         var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
+         rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
+         Timer.CreateTimer_Physics(this.gameObject, 3f, () => {
+            this.status.bProjectileRecastLocked = false;
+            this.extras.hook.ReattachHookContainer_ResetTransform(extras.hookContainerTransform);
+            this.extras.hook.ResetRigidbody();
+         });
+      // }
+   }
+
+
+
+
+   // ! Complex math getters
+
+   Vector3 GetFiringStartPosition(){
+      return extras.hookContainerTransform.position;
+   }
+
+   Vector3 GetVelocityCombined_By_Calculating_DragDistance(){
+      //* Remarks: Here only calculating input delta, no lineRenderer involved.
+      //P: Get world fly direction first.
+      var delta = Input.mousePosition - this.status.dragStartPosition;
+      var dragDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
+      var desiredDirection = -delta.normalized;
+
+      var playerForward = character.transform.forward; //!!!
+      var playerRight = character.transform.right; //!!!
+      var inputForward = new Vector3(playerForward.x, 0, playerForward.z).normalized;
+      var inputRight   = new Vector3(playerRight.x, 0, playerRight.z).normalized;
+
+      // direction + input magnitude, not the real physics term of force.
+      var rawFlyingForce_xComp = (desiredDirection.y * inputForward + desiredDirection.x * inputRight).normalized;
+
+      //P: Limit fly direction within -45 to +45 degree.
+      var angle = Vector3.SignedAngle(rawFlyingForce_xComp, inputForward, Vector3.up);
+
+      //P: Calculate initial xComp velocity
+      var velocity_xComponent = rawFlyingForce_xComp * dragDistance * this.trajs.launchPower;
+
+      //P: Add yComp(height) and become vector combined
+      var radian = this.trajs.upwardAngle * Mathf.Deg2Rad;
+      var velocity_Combined = new Vector3(velocity_xComponent.x, velocity_xComponent.magnitude * Mathf.Sin(radian), velocity_xComponent.z * Mathf.Cos(radian));
+      return velocity_Combined;
+   }
+   #endregion
 }

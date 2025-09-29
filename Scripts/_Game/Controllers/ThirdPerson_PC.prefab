@@ -262,9 +262,18 @@ MonoBehaviour:
     hud_Inst: {fileID: 596251256762369458}
     canvasTransform: {fileID: 7941613901572639876}
   extras:
-    hook: {fileID: 0}
-    trajectoryLine: {fileID: 0}
-    hookContainerTransform: {fileID: 0}
+    hook: {fileID: 3843297159488453526}
+    trajectoryLine: {fileID: 7210921147940153488}
+    hookContainerTransform: {fileID: 494812668880517717}
+  trajs:
+    maxDragDistance: 0
+    launchPower: 0
+    upwardAngle: 0
+    maxAngle: 0
+  status:
+    bIsDragging: 0
+    bProjectileRecastLocked: 0
+    dragStartPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &2610604522736741468
 MonoBehaviour:
   m_ObjectHideFlags: 0
