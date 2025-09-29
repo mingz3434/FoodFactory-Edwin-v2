@@ -24,6 +24,7 @@ public class HUD_Game : UserWidget{
    }
 
    void Update(){
+      if(!_.gs) return;
       Action updateTimer = () => {
          var remainingTime = (_.gs as GameState_Game).inGameInfo_remainingTime;
          var mm = remainingTime / 60;

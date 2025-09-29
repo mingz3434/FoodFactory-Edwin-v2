@@ -1,6 +1,6 @@
 using UnityEngine;
 using _ = GameInstance;
-public class Hook : Actor_Game{
+public class Hook : MonoBehaviour{
 
    [ReadOnly] public GameState_Game gs;
    [ReadOnly] public PlayerController_Game pc;

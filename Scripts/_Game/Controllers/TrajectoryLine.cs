@@ -1,5 +1,5 @@
 using UnityEngine;
-public class TrajectoryLine : Actor_Game {
+public class TrajectoryLine : MonoBehaviour {
 
    public LineRenderer lineRenderer;
 

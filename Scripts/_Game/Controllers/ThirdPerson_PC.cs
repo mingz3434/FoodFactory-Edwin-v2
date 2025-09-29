@@ -47,6 +47,15 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    public System.Random random = new System.Random();
 
+   #region //! PART 2
+   [Serializable] public class UserInterface { public HUD_Game hud_Inst; public Transform canvasTransform; }
+   [Serializable] public class Extras { public Hook hook; public TrajectoryLine trajectoryLine; public Transform hookContainerTransform; }
+
+   public UserInterface ui;
+   public Extras extras;
+   #endregion
+
+
    #region Input region
    void Awake(){ }
 
