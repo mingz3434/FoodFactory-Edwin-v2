@@ -13,7 +13,11 @@ public class GameInstance : MonoBehaviour{
    public static GameInstance gameInstance; //* No need of having network.
    public static GameMode gm; //! Need network
    public static GameState gs; //! Need network
-   public static PlayerController localPC; //! Need network, having pc_RPCM, pChar, PS....
+   /*dep*/public static PlayerController localPC; //! Need network, having pc_RPCM, pChar, PS....
+
+   public static ThirdPerson_PC localPlayer;
+   public static GameObject localCharacter;
+
 
    public Camera preGameCamera;
    public static CustomNetworkManager myNetworkManager;

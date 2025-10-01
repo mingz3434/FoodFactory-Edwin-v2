@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &257547693094344098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7703836132830467481}
+  m_Layer: 0
+  m_Name: Head Position Ref
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7703836132830467481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 257547693094344098}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 3051169148392266428}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &719004088171376449
 GameObject:
   m_ObjectHideFlags: 0
@@ -251,13 +282,15 @@ MonoBehaviour:
     bLocal: 0
     move: {x: 0, y: 0}
     look: {x: 0, y: 0}
+    dragXY: {x: 0, y: 0}
     bSprint: 0
+    bHookDragging: 0
+    bFoodTrayDragging: 0
   animator: {fileID: 3051169148384818454}
   characterController: {fileID: 4962495117040732867}
   mainCamera: {fileID: 5112738750027064476}
   followCamScript: {fileID: 5439205181016574479}
   character: {fileID: 3051169148392097438}
-  characterMesh_GO: {fileID: 3051169148392097414}
   ui:
     hud_Inst: {fileID: 596251256762369458}
     canvasTransform: {fileID: 7941613901572639876}
@@ -265,15 +298,17 @@ MonoBehaviour:
     hook: {fileID: 3843297159488453526}
     trajectoryLine: {fileID: 7210921147940153488}
     hookContainerTransform: {fileID: 494812668880517717}
+    foodTraySlotTransform: {fileID: 7703836132830467481}
   trajs:
-    maxDragDistance: 0
-    launchPower: 0
-    upwardAngle: 0
-    maxAngle: 0
-  status:
-    bIsDragging: 0
-    bProjectileRecastLocked: 0
+    MAX_DRAG_DISTANCE: 2
+    LAUNCH_POWER: 10
+    UPWARD_ANGLE: 45
+    MAX_ANGLE: 45
     dragStartPosition: {x: 0, y: 0, z: 0}
+    dragging_VelocityCombined: {x: 0, y: 0, z: 0}
+  status:
+    bIsHookDragging: 0
+    bProjectileRecastable: 1
 --- !u!114 &2610604522736741468
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,6 +391,34 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 980e881e-182c-404c-8cbf-3d09fdb48fef
     m_ActionName: 'Player/Sprint[/Keyboard/leftShift,/XInputControllerWindows/leftTrigger]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4385866878103190850}
+        m_TargetAssemblyTypeName: ThirdPerson_PC, Assembly-CSharp
+        m_MethodName: OnDragXY
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 62d24bbe-4718-4e2d-a6bb-9bd8695c9e2f
+    m_ActionName: 'Player/DragXY[/Mouse/delta]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 3ee455b8-cce4-4c95-8010-bb0f75a12db0
+    m_ActionName: 'Player/HookDraggingToggle[/Keyboard/g]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: cc28eb35-db28-4b86-87d6-709f252feb66
+    m_ActionName: 'Player/FoodTrayDraggingToggle[/Keyboard/f]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 3a85e87d-676a-46a5-a760-c55b4c6a80c4
+    m_ActionName: 'Player/Sprint2[/Keyboard/leftShift]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -909,6 +972,7 @@ Transform:
   - {fileID: 8646878246096584747}
   - {fileID: 4545674001022744902}
   - {fileID: 574516308227402685}
+  - {fileID: 7703836132830467481}
   - {fileID: 3051169148392266486}
   - {fileID: 3051169148392266406}
   m_Father: {fileID: 3921970426244147129}
@@ -2538,7 +2602,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gs: {fileID: 0}
   pc: {fileID: 0}
-  pChar: {fileID: 0}
+  rb: {fileID: 0}
 --- !u!114 &3284489046835711634
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2911,7 +2975,7 @@ MonoBehaviour:
   CameraDistance: 5.5
   CameraCollisionFilter:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 2048
   IgnoreTag: Player
   CameraRadius: 0.15
   DampingIntoCollision: 0
@@ -2957,7 +3021,7 @@ LineRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4517224961373835196}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

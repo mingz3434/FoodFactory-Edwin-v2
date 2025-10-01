@@ -21,10 +21,8 @@ public class FoodTray : Actor_Game {
    [SyncVar (hook="OnInTrackChanged")] public bool bInTrack = true;
    public void OnInTrackChanged(bool oldValue, bool newValue){
       if(newValue == false){
-         rb.isKinematic = true;
-         rb.useGravity = false;
-         transform.localPosition = new Vector3(0,1.5f,0);
-         transform.localRotation = Quaternion.identity;
+         RB_ResetStatic();
+         T_ResetPositionRotation();
       }
    }
 
@@ -72,14 +70,22 @@ public class FoodTray : Actor_Game {
    }
 
    void Update(){
-      if(!canvas_GO.activeSelf) return;
-      var pCharPosition = (_.localPC as PlayerController_Game).pChar.transform.position;
-      var pCharPosition_SameHeight = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
-      var direction = pCharPosition_SameHeight - canvas_GO.transform.position;
-      if(direction.magnitude == 0f) return;
+      void alwaysFacePlayer(){
+         if(!canvas_GO.activeSelf) return;
+         var pCharPosition = _.localCharacter.transform.position;
+         var pCharPosition_InSameHeight = new Vector3(pCharPosition.x, canvas_GO.transform.position.y, pCharPosition.z);
 
-      var targetRotationInEuler = (Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180, 0)).eulerAngles;
-      canvas_GO.transform.rotation = Quaternion.Euler(0, targetRotationInEuler.y, 0);
+         // calculate direction of look at player horizontally
+         var direction = pCharPosition_InSameHeight - canvas_GO.transform.position;
+         if(direction.magnitude == 0f) return;
+
+         // flip
+         var targetRotationInEuler = (Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180, 0)).eulerAngles;
+         canvas_GO.transform.rotation = Quaternion.Euler(0, targetRotationInEuler.y, 0);
+      }
+
+      alwaysFacePlayer();
+
    }
 
    void OnCollisionEnter(Collision collision){
@@ -126,15 +132,31 @@ public class FoodTray : Actor_Game {
       }
    }
 
-   public void SnapTo(Transform newParentTransform, bool bResetRotation = true){
+   public void SnapTo(Transform newParentTransform){
       transform.parent = newParentTransform;
-      transform.localPosition = Vector3.zero;
-      if(bResetRotation) transform.localRotation = Quaternion.identity;
+      T_ResetPositionRotation();
+      RB_ResetStatic();
+   }
+
+   public void BounceBack(){
+      this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
+   }
+
+   public void RB_Activate(){
+      rb.isKinematic = false;
+      rb.useGravity = true;
+   }
+
+   public void RB_ResetStatic(){
       rb.isKinematic = true;
       rb.useGravity = false;
    }
 
-   public void BounceBack(){
-      this.SnapTo((_.localPC as PlayerController_Game).pChar.slotTransform);
+   public void Set_NoMoreInTrack(){
+      if (this.bInTrack) this.bInTrack = false;
+   }
+
+   public void T_ResetPositionRotation(){
+      transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
    }
 }

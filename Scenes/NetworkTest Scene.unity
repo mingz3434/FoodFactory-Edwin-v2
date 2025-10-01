@@ -399,6 +399,8 @@ MonoBehaviour:
   evaluationMethod: 0
   evaluationInterval: 3
   timeInterpolationGui: 0
+  nextPlayerId: 0
+  playerIdList: 
 --- !u!114 &810704291
 MonoBehaviour:
   m_ObjectHideFlags: 0

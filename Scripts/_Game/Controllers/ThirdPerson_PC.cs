@@ -3,13 +3,16 @@ using UnityEngine.InputSystem;
 using System;
 using Mirror;
 using _ = GameInstance;
+using System.Linq;
 
 //!!! Bind grounds.groundLayers, cameras.cinemachineCameraTarget, audios.landingAudioClip, audios.footstepAudioClips in Inspector
 //!!! groundLayers to "Default" and cct to "CameraRoot" plssssssss!!!
 
-public class ThirdPerson_PC : NetworkBehaviour {
+public partial class ThirdPerson_PC : NetworkBehaviour {
 
-   [SyncVar] public int playerId = -1;
+   [SyncVar] public int playerId = -1; //! Hook for connected players
+
+   public bool bAssetsReady, bInited;
    public Sprite[] playerIcons_Sprite; public SpriteRenderer headFlag_SR;
    public Material[] playerCharacters_Material; public SkinnedMeshRenderer smr_Body; public MeshRenderer mr_LeftWeapon, mr_RightWeapon;
    [Serializable] public class MovementSettings { public float moveSpeed = 4.0f, sprintSpeed = 5.355f, rotationSmoothTime = .12f; [ReadOnly] public float rotationVelocity; }
@@ -21,7 +24,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
    [Serializable] public class CameraSettings { public GameObject cinemachineCameraTarget; public float topClamp = 70f, bottomClamp = -30f, cameraAngleOverride = 0f; public bool lockCameraPosition = false; [ReadOnly] public float cinemachineTargetYaw, cinemachineTargetPitch; }
    [Serializable] public class AudioSettings { public AudioClip landingAudioClip; public AudioClip[] footstepAudioClips; public float footstepAudioVolume = .5f; }
    [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; public bool bLoco, bJumping; }
-   [Serializable] public class InputValues { public bool bLocal; public Vector2 move, look; public bool bSprint; }
+   [Serializable] public class InputValues { public bool bLocal; public Vector2 move, look, dragXY; public bool bSprint; public bool bHookDragging, bFoodTrayDragging; }
 
    public enum AnimationState { Locomotion, Jumping, Punching }
    public AnimationState animationState = AnimationState.Locomotion;
@@ -33,34 +36,17 @@ public class ThirdPerson_PC : NetworkBehaviour {
    public AnimSettings _a;
 
    PlayerInput playerInput;
-   public InputValues iv = new InputValues();
-
+   public InputValues iv;
    public Animator animator;
    public CharacterController characterController;
    public GameObject mainCamera;
    public GameObject followCamScript;
    public GameObject character;
-   public GameObject characterMesh_GO;
 
 
    private const float THRESHOLD = 0.01f;
 
    public System.Random random = new System.Random();
-
-   #region //! PART 2
-   [Serializable] public class UserInterface { public HUD_Game hud_Inst; public Transform canvasTransform; }
-   [Serializable] public class Extras { public Hook hook; public TrajectoryLine trajectoryLine; public Transform hookContainerTransform; }
-   [Serializable] public struct TrajectorySettings{ public float maxDragDistance, launchPower, upwardAngle, maxAngle; }
-   [Serializable] public struct Status{ public bool bIsDragging; public bool bProjectileRecastLocked; public Vector3 dragStartPosition; }
-   public UserInterface ui;
-   public Extras extras;
-   public TrajectorySettings trajs;
-   public Status status;
-   #endregion
-
-
-   #region Input region
-   void Awake(){ }
 
    void LateEnable() { OnLateEnable(); }
    void OnLateEnable() {
@@ -68,6 +54,10 @@ public class ThirdPerson_PC : NetworkBehaviour {
          playerInput.actions["Jump"].started += OnJump_KeyDown;
          playerInput.actions["Sprint"].started += OnSprint_KeyDown;
          playerInput.actions["Sprint"].canceled += OnSprint_KeyUp;
+         playerInput.actions["HookDraggingToggle"].started += OnHookDraggingToggle_KeyDown_G;
+         playerInput.actions["HookDraggingToggle"].canceled += OnHookDraggingToggle_KeyUp_G;
+         playerInput.actions["FoodTrayDraggingToggle"].started += OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
+         playerInput.actions["FoodTrayDraggingToggle"].canceled += OnFoodTrayDraggingToggle_KeyUp_F;
       }
    }
 
@@ -76,19 +66,43 @@ public class ThirdPerson_PC : NetworkBehaviour {
          playerInput.actions["Jump"].started -= OnJump_KeyDown;
          playerInput.actions["Sprint"].started -= OnSprint_KeyDown;
          playerInput.actions["Sprint"].canceled -= OnSprint_KeyUp;
+         playerInput.actions["HookDraggingToggle"].started -= OnHookDraggingToggle_KeyDown_G;
+         playerInput.actions["HookDraggingToggle"].canceled -= OnHookDraggingToggle_KeyUp_G;
+         playerInput.actions["FoodTrayDraggingToggle"].started -= OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
+         playerInput.actions["FoodTrayDraggingToggle"].canceled -= OnFoodTrayDraggingToggle_KeyUp_F;
       }
    }
 
    public void OnMove(InputAction.CallbackContext context){ iv.move = context.ReadValue<Vector2>(); }
    public void OnLook(InputAction.CallbackContext context){ iv.look = context.ReadValue<Vector2>(); }
+   public void OnDragXY(InputAction.CallbackContext context){ iv.dragXY = Input.mousePosition; }
    void OnJump_KeyDown(InputAction.CallbackContext context){ Jump(); } //! Go Jump, no bool is need
    void OnSprint_KeyDown(InputAction.CallbackContext context){ iv.bSprint = true; }
    void OnSprint_KeyUp(InputAction.CallbackContext context){ iv.bSprint = false; }
+  
+   void SyncIdInit(){
+      headFlag_SR.sprite = playerIcons_Sprite[playerId];
+      this.gameObject.name = $"P{playerId + 1}_Controller";
+      smr_Body.material = playerCharacters_Material[playerId];
+      mr_LeftWeapon.material = playerCharacters_Material[playerId];
+      mr_RightWeapon.material = playerCharacters_Material[playerId];
+      Log_1008_SyncIdInit();
+   }
 
+   [Command (requiresAuthority = false)]
+   void Cmd_SyncIdInit() {
+      Rpc_SyncIdInit((NetworkManager.singleton as CustomNetworkManager).GetSelfPlayerId(this.connectionToClient));
+   }
 
-   #endregion
+   [ClientRpc]
+   void Rpc_SyncIdInit(int playerId) {
+      this.playerId = playerId;
+      SyncIdInit();
+   }
 
    void Start() {
+      Log_1001_Start();
+
       playerInput = GetComponent<PlayerInput>();
 
       // Local player check.
@@ -99,22 +113,14 @@ public class ThirdPerson_PC : NetworkBehaviour {
          if (playerInput) { Destroy(playerInput); }
          if (mainCamera) { Destroy(mainCamera); }
          if (followCamScript) { Destroy(followCamScript); }
-      }
-
-      void SyncIdInit(){
-         headFlag_SR.sprite = playerIcons_Sprite[playerId];
-         this.gameObject.name = $"P{playerId+1}_Controller";
-         smr_Body.material = playerCharacters_Material[playerId];
-         mr_LeftWeapon.material = playerCharacters_Material[playerId];
-         mr_RightWeapon.material = playerCharacters_Material[playerId];
-      }
-
-      Timer.CreateTimer_NoPhysics(this.gameObject, .1f, () => {
          SyncIdInit();
-         playerInput.enabled = true;
-      });
+      }
 
-
+      if (isLocalPlayer) {
+         _.localPlayer = this;
+         _.localCharacter = this.character;
+         Cmd_SyncIdInit();
+      }
 
       // iv local for inspector to view.
       iv.bLocal = true;
@@ -127,6 +133,11 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
    }
 
+   public override void OnStartLocalPlayer(){
+      base.OnStartLocalPlayer();
+      playerInput = GetComponent<PlayerInput>();
+      if (playerInput) { playerInput.enabled = true; }
+   }
 
 
    private void AssignAnimatorHashIds() {
@@ -136,8 +147,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
    }
 
    void Update(){
-      if(!isLocalPlayer) return;
 
+      
 
 
       AnimatorParamToLocal();
@@ -148,11 +159,8 @@ public class ThirdPerson_PC : NetworkBehaviour {
 
       LocalParamToAnimator();
 
-      
-      if (Input.GetMouseButtonDown(0)) { EnableTrajectory_StartDragging(); }
 
-      if (this.status.bIsDragging) { TrajectoryLogics(); } //! including release logics at the end.
-
+      Update_P2();
 
    }
 
@@ -174,9 +182,7 @@ public class ThirdPerson_PC : NetworkBehaviour {
       if(bLoco) { //playing loco and is grounded
          animationState = AnimationState.Jumping;
 
-         if(!B_AlreadyPlayingDesiredAnimClip(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
-
-         
+         if(!B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animator.GetCurrentAnimatorStateInfo(0), "Jump_1")) animator.CrossFade("Jump_1", .25f, 0, 0f);
 
          Timer.CreateTimer_NoPhysics(this.gameObject, .9f, () => { animationState = AnimationState.Locomotion; });
       }
@@ -221,10 +227,10 @@ public class ThirdPerson_PC : NetworkBehaviour {
       var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
 
       //varies anim by speed sth like that.
-      if(speedHorizontal > 0.1f && !B_AlreadyPlayingDesiredAnimClip(animatorInfo, "Move_1")) {
+      if(speedHorizontal > 0.1f && !B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Move_1")) {
          animator.Play("Move_1");
       }
-      else if(!B_AlreadyPlayingDesiredAnimClip(animatorInfo, "Idle_1")){
+      else if(!B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Idle_1")){
          animator.Play("Idle_1");
       }
 
@@ -298,108 +304,24 @@ public class ThirdPerson_PC : NetworkBehaviour {
       }
    }
 
-   public bool B_AlreadyPlayingDesiredAnimClip(AnimatorStateInfo animatorStateInfo, string stateName){
+   public bool B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(AnimatorStateInfo animatorStateInfo, string stateName){
       return animatorStateInfo.IsName(stateName) && animatorStateInfo.normalizedTime >= 1.0f;
    }
 
 
+}
 
 
 
-   #region //! PART 2
-void EnableTrajectory_StartDragging(){
-      if (this.status.bProjectileRecastLocked) return; // !!!!!!!!!!!!!!
-      this.status.bIsDragging = true;
-      this.status.dragStartPosition = Input.mousePosition; Debug.Log(Input.mousePosition);
-      this.extras.trajectoryLine.lineRenderer.enabled = true;
-   }
+public partial class ThirdPerson_PC : NetworkBehaviour {
+   public void Log_1000_OnStartLocalPlayer(){ Debug.Log("1000: OnStartLocalPlayer");  }
+   public void Log_1001_Start(){ Debug.Log("1001: Start");  }
+   public void Log_1002_LateEnable(){ Debug.Log("1002: LateEnable");  }
+   public void Log_1003_Disable(){ Debug.Log("1003: Disable");  }
+   public void Log_1004U_Move(){ Debug.Log("1004U: Move");  }
+   public void Log_1005U_Look(){ Debug.Log("1005U: Look");  }
+   public void Log_1006U_DragXY(){ Debug.Log("1006U: DragXY"); }
+   public void Log_1007U_Sprint(){ Debug.Log("1007U: Sprint"); }
+   public void Log_1008_SyncIdInit(){ Debug.Log("1008: SyncIdInit"); }
 
-
-
-   void TrajectoryLogics(){ //P: Including release mouse button logics
-
-      //// prefer become pointing back to real method cuz here is inside the update
-      //// but now will not do it cuz for better managing.
-
-      Action<Vector3, Vector3> updateDrawTrajectoryLine_LineRenderer = (startPos, velocityCombined) => {
-         var points = new Vector3[50];
-         for (int i = 0; i < 50; i++){ //P: hardcode 50 temporary
-            float time = i * .05f; //P: Est. each .05s timeframe as segment of trajectory
-            points[i] = startPos + velocityCombined * time + 0.5f * Physics.gravity * time * time;
-         }
-         this.extras.trajectoryLine.lineRenderer.SetPositions(points);
-      };
-
-      var velocityCombined = GetVelocityCombined_By_Calculating_DragDistance();
-
-      updateDrawTrajectoryLine_LineRenderer( GetFiringStartPosition(), velocityCombined );
-
-      //P: If release mouse left btn, fire.
-      if (Input.GetMouseButtonUp(0)){
-         this.status.bIsDragging = false;
-         this.extras.trajectoryLine.lineRenderer.enabled = false; // hide trajectory line
-         FireProjectile(velocityCombined);
-      }
-   }
-
-   void FireProjectile(Vector3 velocity){
-
-      // Fire first food when having food on hand.
-      // if (character.slotTransform.childCount > 0 ){
-         // this.status.bProjectileRecastLocked = true;
-         // var firstFood = pChar.slotTransform.GetChild(0).gameObject; firstFood.transform.SetParent(null);
-         // var rb = firstFood.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true; rb.mass = 1f; rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
-         // rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
-         // Timer.CreateTimer_Physics(this.gameObject, 3f, () => this.status.bProjectileRecastLocked = false );
-      // }
-
-      // Fire a hook for getting something back.
-      // else{
-         var hook = this.extras.hook.gameObject; hook.transform.SetParent(null); this.status.bProjectileRecastLocked = true;
-         var rb = hook.GetComponent<Rigidbody>(); rb.isKinematic = false; rb.useGravity = true;
-         rb.AddForce(velocity, ForceMode.VelocityChange); //!!!!! ADD FORCE !!!!!
-         Timer.CreateTimer_Physics(this.gameObject, 3f, () => {
-            this.status.bProjectileRecastLocked = false;
-            this.extras.hook.ReattachHookContainer_ResetTransform(extras.hookContainerTransform);
-            this.extras.hook.ResetRigidbody();
-         });
-      // }
-   }
-
-
-
-
-   // ! Complex math getters
-
-   Vector3 GetFiringStartPosition(){
-      return extras.hookContainerTransform.position;
-   }
-
-   Vector3 GetVelocityCombined_By_Calculating_DragDistance(){
-      //* Remarks: Here only calculating input delta, no lineRenderer involved.
-      //P: Get world fly direction first.
-      var delta = Input.mousePosition - this.status.dragStartPosition;
-      var dragDistance = Math.Clamp(delta.magnitude / Screen.height, 0f, 2);
-      var desiredDirection = -delta.normalized;
-
-      var playerForward = character.transform.forward; //!!!
-      var playerRight = character.transform.right; //!!!
-      var inputForward = new Vector3(playerForward.x, 0, playerForward.z).normalized;
-      var inputRight   = new Vector3(playerRight.x, 0, playerRight.z).normalized;
-
-      // direction + input magnitude, not the real physics term of force.
-      var rawFlyingForce_xComp = (desiredDirection.y * inputForward + desiredDirection.x * inputRight).normalized;
-
-      //P: Limit fly direction within -45 to +45 degree.
-      var angle = Vector3.SignedAngle(rawFlyingForce_xComp, inputForward, Vector3.up);
-
-      //P: Calculate initial xComp velocity
-      var velocity_xComponent = rawFlyingForce_xComp * dragDistance * this.trajs.launchPower;
-
-      //P: Add yComp(height) and become vector combined
-      var radian = this.trajs.upwardAngle * Mathf.Deg2Rad;
-      var velocity_Combined = new Vector3(velocity_xComponent.x, velocity_xComponent.magnitude * Mathf.Sin(radian), velocity_xComponent.z * Mathf.Cos(radian));
-      return velocity_Combined;
-   }
-   #endregion
 }

@@ -109,7 +109,7 @@ public class PlayerController_Game : PlayerController{
       //P: If it's food, no more move.
       if (hit.collider.CompareTag("Food")){
          var foodTray = hit.collider.gameObject.GetComponent<FoodTray>();
-         foodTray.SnapTo(pChar.slotTransform, false);
+         foodTray.SnapTo(pChar.slotTransform);
          foodTray.bInTrack = false; // !!!!!!
          Debug.Log("Food placed in Player's Food Slot!");
       }
@@ -171,7 +171,7 @@ public class PlayerController_Game : PlayerController{
          Timer.CreateTimer_Physics(this.gameObject, 3f, () => {
             this.status.bProjectileRecastLocked = false;
             this.hook.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
-            this.hook.ResetRigidbody();
+            this.hook.RB_ResetStatic();
          });
       }
    }

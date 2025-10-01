@@ -3,31 +3,34 @@ using _ = GameInstance;
 public class Hook : MonoBehaviour{
 
    [ReadOnly] public GameState_Game gs;
-   [ReadOnly] public PlayerController_Game pc;
-   [ReadOnly] public PlayerCharacter_Game pChar;
+   [ReadOnly] public Rigidbody rb;
 
    void Awake(){
       gs = _.gs as GameState_Game;
+      rb = this.GetComponent<Rigidbody>();
    }
 
    void OnCollisionEnter(Collision collision){
+      
       var go = collision.gameObject;
       if(!go.CompareTag("Food")) return;
+      if(!_.localPlayer.iv.bHookDragging) return;
       Debug.Log("Hook: The collision hit object is a Food.");
+      OnFoodTrayHit(go.GetComponent<FoodTray>());
+   }
 
-      var foodTray = go.GetComponent<FoodTray>();
-      if(!foodTray) { Debug.Log("Hook: The collision hit object is not a FoodTray."); return; }
+   void OnFoodTrayHit(FoodTray tray){
       Debug.Log("Hook: The collision hit object is a FoodTray.");
 
-      foodTray.transform.SetParent(pChar.slotTransform);
-      foodTray.gameObject.transform.localPosition = Vector3.zero;
-      foodTray.rb.isKinematic = true;
-      foodTray.rb.useGravity = false;
-      if(foodTray.bInTrack) foodTray.bInTrack = false;
+      tray.transform.SetParent(_.localPlayer.extras.foodTraySlotTransform);
+      tray.transform.localPosition = Vector3.zero;
+      tray.RB_ResetStatic();
+      tray.Set_NoMoreInTrack();
 
-      this.ReattachHookContainer_ResetTransform(pChar.hookContainerTransform);
-      this.ResetRigidbody();
-      pc.status.bProjectileRecastLocked = false;
+      this.ReattachHookContainer_ResetTransform(_.localPlayer.extras.hookContainerTransform);
+      this.RB_ResetStatic();
+
+      _.localPlayer.SetStatus_Recastable();
    }
 
    public void ReattachHookContainer_ResetTransform(Transform containerTransform){
@@ -36,9 +39,17 @@ public class Hook : MonoBehaviour{
       this.transform.localRotation = Quaternion.identity;      
    }
 
-   public void ResetRigidbody(){
+   public void RB_ResetStatic(){
       var rb = this.GetComponent<Rigidbody>();
       rb.isKinematic = true;
       rb.useGravity = false;
    }
+
+   public void RB_Activate(){
+      var rb = this.GetComponent<Rigidbody>();
+      rb.isKinematic = false;
+      rb.useGravity = true;
+   }
+
+
 }
