@@ -237,11 +237,11 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
       var animatorInfo = animator.GetCurrentAnimatorStateInfo(0);
 
       //varies anim by speed sth like that.
-      if(speedHorizontal > 0.1f && !B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Move_1")) {
-         animator.Play("Move_1");
+      if(speedHorizontal > 0.1f) {
+         if(!B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Move_1")) animator.Play("Move_1");
       }
-      else if(!B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Idle_1")){
-         animator.Play("Idle_1");
+      else{
+         if(!B_AlreadyPlayingDesiredAnimClip_and_ClipFinished(animatorInfo, "Idle_1")) animator.Play("Idle_1");
       }
 
    } 

@@ -139,7 +139,7 @@ public class FoodTray : Actor_Game {
    }
 
    public void BounceBack(){
-      this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
+      // this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
    }
 
    public void RB_Activate(){
