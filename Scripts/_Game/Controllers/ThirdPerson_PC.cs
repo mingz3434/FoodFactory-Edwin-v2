@@ -54,10 +54,10 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
          playerInput.actions["Jump"].started += OnJump_KeyDown;
          playerInput.actions["Sprint"].started += OnSprint_KeyDown;
          playerInput.actions["Sprint"].canceled += OnSprint_KeyUp;
-         playerInput.actions["HookDraggingToggle"].started += OnHookDraggingToggle_KeyDown_G;
-         playerInput.actions["HookDraggingToggle"].canceled += OnHookDraggingToggle_KeyUp_G;
-         playerInput.actions["FoodTrayDraggingToggle"].started += OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
-         playerInput.actions["FoodTrayDraggingToggle"].canceled += OnFoodTrayDraggingToggle_KeyUp_F;
+         // playerInput.actions["HookDraggingToggle"].started += OnHookDraggingToggle_KeyDown_G;
+         // playerInput.actions["HookDraggingToggle"].canceled += OnHookDraggingToggle_KeyUp_G;
+         // playerInput.actions["FoodTrayDraggingToggle"].started += OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
+         // playerInput.actions["FoodTrayDraggingToggle"].canceled += OnFoodTrayDraggingToggle_KeyUp_F;
       }
    }
 
@@ -66,10 +66,10 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
          playerInput.actions["Jump"].started -= OnJump_KeyDown;
          playerInput.actions["Sprint"].started -= OnSprint_KeyDown;
          playerInput.actions["Sprint"].canceled -= OnSprint_KeyUp;
-         playerInput.actions["HookDraggingToggle"].started -= OnHookDraggingToggle_KeyDown_G;
-         playerInput.actions["HookDraggingToggle"].canceled -= OnHookDraggingToggle_KeyUp_G;
-         playerInput.actions["FoodTrayDraggingToggle"].started -= OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
-         playerInput.actions["FoodTrayDraggingToggle"].canceled -= OnFoodTrayDraggingToggle_KeyUp_F;
+         // playerInput.actions["HookDraggingToggle"].started -= OnHookDraggingToggle_KeyDown_G;
+         // playerInput.actions["HookDraggingToggle"].canceled -= OnHookDraggingToggle_KeyUp_G;
+         // playerInput.actions["FoodTrayDraggingToggle"].started -= OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F;
+         // playerInput.actions["FoodTrayDraggingToggle"].canceled -= OnFoodTrayDraggingToggle_KeyUp_F;
       }
    }
 
@@ -86,7 +86,7 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
       smr_Body.material = playerCharacters_Material[playerId];
       mr_LeftWeapon.material = playerCharacters_Material[playerId];
       mr_RightWeapon.material = playerCharacters_Material[playerId];
-      Log_1008_SyncIdInit();
+      // Log_1008_SyncIdInit();
    }
 
    [Command (requiresAuthority = false)]
@@ -100,8 +100,18 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
       SyncIdInit();
    }
 
+   [Command (requiresAuthority = false)]
+   void Cmd_ClientLog(string msg) {
+      Rpc_ClientLog(msg);
+   }
+
+   [ClientRpc]
+   void Rpc_ClientLog(string msg) {
+      Debug.Log(msg);
+   }
+
    void Start() {
-      Log_1001_Start();
+      // Log_1001_Start();
 
       playerInput = GetComponent<PlayerInput>();
 
@@ -160,7 +170,7 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
       LocalParamToAnimator();
 
 
-      Update_P2();
+      // Update_P2();
 
    }
 
@@ -313,15 +323,15 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
 
 
 
-public partial class ThirdPerson_PC : NetworkBehaviour {
-   public void Log_1000_OnStartLocalPlayer(){ Debug.Log("1000: OnStartLocalPlayer");  }
-   public void Log_1001_Start(){ Debug.Log("1001: Start");  }
-   public void Log_1002_LateEnable(){ Debug.Log("1002: LateEnable");  }
-   public void Log_1003_Disable(){ Debug.Log("1003: Disable");  }
-   public void Log_1004U_Move(){ Debug.Log("1004U: Move");  }
-   public void Log_1005U_Look(){ Debug.Log("1005U: Look");  }
-   public void Log_1006U_DragXY(){ Debug.Log("1006U: DragXY"); }
-   public void Log_1007U_Sprint(){ Debug.Log("1007U: Sprint"); }
-   public void Log_1008_SyncIdInit(){ Debug.Log("1008: SyncIdInit"); }
+// public partial class ThirdPerson_PC : NetworkBehaviour {
+//    public void Log_1000_OnStartLocalPlayer(){ Debug.Log("1000: OnStartLocalPlayer");  }
+//    public void Log_1001_Start(){ Debug.Log("1001: Start");  }
+//    public void Log_1002_LateEnable(){ Debug.Log("1002: LateEnable");  }
+//    public void Log_1003_Disable(){ Debug.Log("1003: Disable");  }
+//    public void Log_1004U_Move(){ Debug.Log("1004U: Move");  }
+//    public void Log_1005U_Look(){ Debug.Log("1005U: Look");  }
+//    public void Log_1006U_DragXY(){ Debug.Log("1006U: DragXY"); }
+//    public void Log_1007U_Sprint(){ Debug.Log("1007U: Sprint"); }
+//    public void Log_1008_SyncIdInit(){ Debug.Log("1008: SyncIdInit"); }
 
-}
+// }
