@@ -22,15 +22,15 @@ public class Hook : MonoBehaviour{
    void OnFoodTrayHit(FoodTray tray){
       Debug.Log("Hook: The collision hit object is a FoodTray.");
 
-      // tray.transform.SetParent(_.localPlayer.extras.foodTraySlotTransform);
+      tray.transform.SetParent(_.localPlayer.extras.foodTraySlotTransform);
       tray.transform.localPosition = Vector3.zero;
       tray.RB_ResetStatic();
       tray.Set_NoMoreInTrack();
 
-      // this.ReattachHookContainer_ResetTransform(_.localPlayer.extras.hookContainerTransform);
+      this.ReattachHookContainer_ResetTransform(_.localPlayer.extras.hookContainerTransform);
       this.RB_ResetStatic();
 
-      // _.localPlayer.SetStatus_Recastable();
+      _.localPlayer.SetStatus_Recastable();
    }
 
    public void ReattachHookContainer_ResetTransform(Transform containerTransform){

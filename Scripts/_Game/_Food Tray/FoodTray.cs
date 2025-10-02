@@ -32,7 +32,7 @@ public class FoodTray : Actor_Game {
 
       var sc = (_.gs as GameState_Game).splineContainer;
       tray.transform.position = sc.EvaluatePosition(0f);
-      tray.transform.Translate(new Vector3(0,1f,0));
+      tray.transform.Translate(new Vector3(0,0f,0));
 
       var tangent = sc.EvaluateTangent(0f);
       tray.transform.rotation = Quaternion.LookRotation(tangent);
@@ -57,7 +57,7 @@ public class FoodTray : Actor_Game {
       if ((_.gs as GameState_Game).splineContainer == null || !bInTrack) return;
       portionValue += .06f * Time.fixedDeltaTime;
 
-      var newPosition = (_.gs as GameState_Game).splineContainer.EvaluatePosition(portionValue); newPosition.y = 1.5f;
+      var newPosition = (_.gs as GameState_Game).splineContainer.EvaluatePosition(portionValue); newPosition.y = 0.5f;
       var tangent = (_.gs as GameState_Game).splineContainer.EvaluateTangent(portionValue);
       var faceDirection = tangent;
 
@@ -139,7 +139,7 @@ public class FoodTray : Actor_Game {
    }
 
    public void BounceBack(){
-      // this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
+      this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
    }
 
    public void RB_Activate(){

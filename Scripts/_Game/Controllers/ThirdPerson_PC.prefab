@@ -225,6 +225,8 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.05
   playerId: -1
+  bAssetsReady: 0
+  bInited: 0
   playerIcons_Sprite:
   - {fileID: 21300000, guid: f086d958a9835264d97e3a9029fb6d4a, type: 3}
   - {fileID: 21300000, guid: 0c187da051dd79a4c9503fe3e765138c, type: 3}
@@ -455,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncDirection: 1
   syncMode: 0
-  syncInterval: 0.1
+  syncInterval: 0.05
   clientAuthority: 1
   animator: {fileID: 3051169148384818454}
 --- !u!1 &2458798766534630083
@@ -2601,7 +2603,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gs: {fileID: 0}
-  pc: {fileID: 0}
   rb: {fileID: 0}
 --- !u!114 &3284489046835711634
 MonoBehaviour:

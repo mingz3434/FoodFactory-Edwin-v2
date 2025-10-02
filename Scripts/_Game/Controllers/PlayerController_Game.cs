@@ -11,7 +11,6 @@ public class PlayerController_Game : PlayerController{
    [ReadOnly] public GameState_Game gs; public GameState_Game GetGameState(){ return gs; }
    [ReadOnly] public PlayerCharacter_Game pChar;
    [ReadOnly] public PlayerState_Game ps;
-   [ReadOnly] public PlayerController_Game_RPCM rpcm;
    [ReadOnly] public TrajectoryLine trajectoryLine;
    [ReadOnly] public Hook hook;
 

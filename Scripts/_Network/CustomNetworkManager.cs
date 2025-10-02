@@ -26,17 +26,20 @@ public class CustomNetworkManager : NetworkManager {
    public override void OnServerAddPlayer(NetworkConnectionToClient newConnection){
       base.OnServerAddPlayer(newConnection);
 
-      if (newConnection.identity != null){
-
-         var assignedPlayerId = nextPlayerId++;
-
+      int assignedPlayerId;
+        
+      if (playerIds.TryGetValue(newConnection, out assignedPlayerId)){
+         // Reconnection or existing connection: reuse the existing playerId
+         Debug.Log($"Reusing playerId {assignedPlayerId} for connection {newConnection.connectionId}");
+      } else {
+         // New connection: assign a new playerId
+         assignedPlayerId = nextPlayerId++;
          playerIds.Add(newConnection, assignedPlayerId);
-         Debug.Log(newConnection.connectionId);
          playerIdList.Add(assignedPlayerId);
-
-         newConnection.identity.GetComponent<ThirdPerson_PC>().playerId = assignedPlayerId;
-
+         Debug.Log($"Assigned new playerId {assignedPlayerId} for connection {newConnection.connectionId}");
       }
+      
+      newConnection.identity.GetComponent<ThirdPerson_PC>().playerId = assignedPlayerId;
    }
 
    public int GetSelfPlayerId(NetworkConnectionToClient conn){

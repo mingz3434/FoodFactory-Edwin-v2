@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Splines;
 using Mirror;
-using ServerActive = Mirror.ServerAttribute;
-using CallServer = Mirror.CommandAttribute;
-using ClientRpc = Mirror.ClientRpcAttribute;
 using _ = GameInstance;
 
 
@@ -18,9 +15,6 @@ public class GameState_Game : GameState {
    [Serializable] public struct Transforms { public Transform mapTransform, canvasTransform, conveyorBeltContainerTransform, foodTrayOnBeltContainerTransform, orderTransform; }
    [Serializable] public struct InGameInfo { [SyncVar] public int remainingTime, score; public int totalOrdersRequired_GR, remainingOrders_Int_GR; public List<Order> pendingOrders; public int latestOrderId; } /* GR for Game Round. */ [SyncVar] public int inGameInfo_remainingTime = 10;
    [Serializable] public struct NetworkInfo { public int totalPlayers, enteredPlayers; public List<PlayerController_Game> players; }
-
-   public GameState_Game_RPCM rpcm;
-
    public SplineContainer splineContainer;
    [ReadOnly] public Vector3 splineCenter;
 
@@ -31,15 +25,15 @@ public class GameState_Game : GameState {
    public NetworkInfo networkInfo = new NetworkInfo() { players = new List<PlayerController_Game>() };
    public AudioSource bgmPlayer;
 
-   void Awake() { _.gs = this; rpcm.gs = this; }
+   void Awake() { _.gs = this; }
 
    void Start(){
       while (!NetworkClient.ready) { StartCoroutine(CRT()); return; } //* Keep it blocked is acutally good somehow.
       // NetworkClient.AddPlayer(); //!!!!!!
       // PlayBGM();
-      rpcm.Server_StartTimer();
-      rpcm.Server_GenerateConveyors();
-      rpcm.Server_RegularSpawnFood();
+      this.Server_StartTimer(); 
+      this.Server_GenerateConveyors(); Debug.Log("GC");
+      this.Server_RegularSpawnFood();
 
       // RegularAddNewOrder();
       // AddPendingOrder(1, new Dictionary<Food, int>() { { Food.Create_NonActing_Food(this.transforms.orderTransform, Food.RawFood.Chicken, "Raw Chicken"), 2 } });
@@ -99,17 +93,71 @@ public class GameState_Game : GameState {
       }
    }
 
-   [CallServer]
+   [Command]
    public void Cmd_AddTotalPlayers() {
       _.gameInstance.AddBothLog("GS: CallServer: AddTotalPlayers.");
       this.networkInfo.totalPlayers++;
    }
 
-   [CallServer]
+   [Command]
    public void Cmd_AddEnteredPlayer() {
       _.gameInstance.AddBothLog("GS: CallServer: AddEnteredPlayer.");
       this.networkInfo.enteredPlayers++;
    }
 
 
+
+
+
+   
+   [Server]
+   public void Server_StartTimer() { //Broadcast timer time by SyncVar
+      Timer.CreateTimer_NoPhysics(
+         this.gameObject,
+         1f,
+         () => {
+            this.inGameInfo_remainingTime -= 1;
+            Debug.Log("Timer tick: " + this.inGameInfo_remainingTime);
+            var b = this.inGameInfo_remainingTime <= 0;
+            if(!b) {
+               Server_StartTimer();
+            }
+         }
+      );
+   }
+
+   [Server]
+   public void Server_GenerateConveyors() {
+      var spline = this.splineContainer.Spline;
+      var segmentCount = Mathf.CeilToInt(spline.GetLength() / this.conveyorSettings.segmentLength);
+      for (int i = 0; i < segmentCount; i++) {
+         var portionValue = i * this.conveyorSettings.segmentLength / spline.GetLength();
+         var position = spline.EvaluatePosition(portionValue); var tangent = spline.EvaluateTangent(portionValue); var up = spline.EvaluateUpVector(portionValue);
+         var rotation = Quaternion.LookRotation(tangent, up);
+         var trackRotation = rotation * Quaternion.Euler(90, 0, 0);
+
+         if (i == 0) {
+            FoodSpawner.CreateFoodSpawner(this.prefabs.foodSpawner_Prefab, this.transforms.conveyorBeltContainerTransform, position, rotation);
+         }
+         else {
+            ConveyorBeltSegment.CreateConveyorBeltSegment(this.prefabs.conveyorBeltSegment_Prefab, this.transforms.conveyorBeltContainerTransform, position, trackRotation, i - 1);
+         }
+
+      }
+   }
+
+   [Server]
+   public void Server_RegularSpawnFood(){
+      Timer.CreateTimer_Physics(this.gameObject, 2f, () => {
+         // Client_LogWarning(_.gameInstance ? "gi exists" : "gi does not exist");
+         // Client_LogWarning(_.gs ? "gs exists" : "gs does not exist");
+         var foodTray = FoodTray.CreateFoodTray(this.prefabs.foodTray_Prefab, this.transforms.foodTrayOnBeltContainerTransform);
+         Server_RegularSpawnFood();
+      });
+   }
+
+   [ClientRpc]
+   public void Client_LogWarning(string message){
+      Debug.LogWarning(message);
+   }
 }
