@@ -9,12 +9,12 @@ using _ = GameInstance;
 
 [AddComponentMenu("Variables/Game State Game")]
 public class GameState_Game : GameState {
-   [Serializable] public struct Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite, chickenStirred_Sprite, chickenSliced_Sprite, chickenFried_Sprite, nugget_Sprite, chickenFailed_Sprite; public Sprite potatoRaw_Sprite, potatoSliced_Sprite, potatoFried_Sprite, potatoCompleted_Sprite, potatoFailed_Sprite; }
-   [Serializable] public struct Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; public Order order_Prefab; }
-   [Serializable] public struct ConveyorSettings { public float segmentLength, width; }
-   [Serializable] public struct Transforms { public Transform mapTransform, canvasTransform, conveyorBeltContainerTransform, foodTrayOnBeltContainerTransform, orderTransform; }
-   [Serializable] public struct InGameInfo { [SyncVar] public int remainingTime, score; public int totalOrdersRequired_GR, remainingOrders_Int_GR; public List<Order> pendingOrders; public int latestOrderId; } /* GR for Game Round. */ [SyncVar] public int inGameInfo_remainingTime = 10;
-   [Serializable] public struct NetworkInfo { public int totalPlayers, enteredPlayers; public List<PlayerController_Game> players; }
+   [Serializable] public class Assets { public AudioClip game_BGM; public Sprite chickenRaw_Sprite, chickenStirred_Sprite, chickenSliced_Sprite, chickenFried_Sprite, nugget_Sprite, chickenFailed_Sprite; public Sprite potatoRaw_Sprite, potatoSliced_Sprite, potatoFried_Sprite, potatoCompleted_Sprite, potatoFailed_Sprite; }
+   [Serializable] public class Prefabs { public FoodTray foodTray_Prefab; public TrajectoryLine trajectoryLine_Prefab; public Hook hook_Prefab; public Food food_Prefab; public ConveyorBeltSegment conveyorBeltSegment_Prefab; public FoodSpawner foodSpawner_Prefab; public Order order_Prefab; }
+   [Serializable] public class ConveyorSettings { public float segmentLength, width; }
+   [Serializable] public class Transforms { public Transform mapTransform, canvasTransform, conveyorBeltContainerTransform, foodTrayOnBeltContainerTransform, orderTransform; }
+   [Serializable] public class InGameInfo { [SyncVar] public int remainingTime, score; public int totalOrdersRequired_GR, remainingOrders_Int_GR; public List<Order> pendingOrders; public int latestOrderId; } /* GR for Game Round. */ [SyncVar] public int inGameInfo_remainingTime = 10;
+   [Serializable] public class NetworkInfo { public int totalPlayers, enteredPlayers; public List<PlayerController_Game> players; }
    public SplineContainer splineContainer;
    [ReadOnly] public Vector3 splineCenter;
 

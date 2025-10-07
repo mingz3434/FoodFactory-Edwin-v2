@@ -16,7 +16,7 @@ public class Cutter : Machine{
 
       Debug.Log($"Cutter: Cutting {newProductName}...");
 
-      tray.SnapTo(this.slot.transform);
+      // tray.Cmd_SnapTo(this.slot.transform);
       tray.canvas_GO.SetActive(true);
 
       tray.slider.gameObject.SetActive(true);

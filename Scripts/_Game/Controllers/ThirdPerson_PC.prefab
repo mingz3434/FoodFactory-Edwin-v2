@@ -280,6 +280,8 @@ MonoBehaviour:
     punching_Id: 0
     bLoco: 0
     bJumping: 0
+  _debug:
+    bCastPickFoodRay: 0
   iv:
     bLocal: 0
     move: {x: 0, y: 0}
@@ -968,7 +970,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 3, z: 0}
-  m_LocalScale: {x: 1.21, y: 1.21, z: 1.21}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8646878246096584747}
@@ -2628,7 +2630,7 @@ MonoBehaviour:
   interpolatePosition: 1
   interpolateRotation: 1
   interpolateScale: 1
-  coordinateSpace: 0
+  coordinateSpace: 1
   timelineOffset: 1
   showGizmos: 0
   showOverlay: 0
@@ -3338,7 +3340,7 @@ Transform:
   m_GameObject: {fileID: 5112738750027064476}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4.6940002, z: -5.5}
+  m_LocalPosition: {x: 0, y: 4.8899994, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3507,7 +3509,7 @@ Transform:
   m_GameObject: {fileID: 5439205181016574479}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 4.6940002, z: -5.5}
+  m_LocalPosition: {x: 0, y: 4.8899994, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

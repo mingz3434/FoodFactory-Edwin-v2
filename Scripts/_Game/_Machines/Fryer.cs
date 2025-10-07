@@ -16,7 +16,7 @@ public class Fryer : Machine{
 
       Debug.Log($"Fryer: Frying {newProductName}...");
 
-      tray.SnapTo(this.slots[availableSlotId].transform);
+      // tray.Cmd_SnapTo(this.slots[availableSlotId].transform);
       tray.canvas_GO.SetActive(true);
 
       tray.slider.gameObject.SetActive(true);

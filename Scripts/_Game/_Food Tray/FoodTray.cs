@@ -54,6 +54,7 @@ public class FoodTray : Actor_Game {
    }
 
    void FixedUpdate(){
+      if(!isServer) return;
       if ((_.gs as GameState_Game).splineContainer == null || !bInTrack) return;
       portionValue += .06f * Time.fixedDeltaTime;
 
@@ -70,6 +71,7 @@ public class FoodTray : Actor_Game {
    }
 
    void Update(){
+
       void alwaysFacePlayer(){
          if(!canvas_GO.activeSelf) return;
          var pCharPosition = _.localCharacter.transform.position;
@@ -132,14 +134,8 @@ public class FoodTray : Actor_Game {
       }
    }
 
-   public void SnapTo(Transform newParentTransform){
-      transform.parent = newParentTransform;
-      T_ResetPositionRotation();
-      RB_ResetStatic();
-   }
-
    public void BounceBack(){
-      this.SnapTo(_.localPlayer.extras.foodTraySlotTransform);
+      // this.Cmd_SnapTo(_.localPlayer.extras.foodTraySlotTransform);
    }
 
    public void RB_Activate(){
@@ -152,9 +148,7 @@ public class FoodTray : Actor_Game {
       rb.useGravity = false;
    }
 
-   public void Set_NoMoreInTrack(){
-      if (this.bInTrack) this.bInTrack = false;
-   }
+
 
    public void T_ResetPositionRotation(){
       transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
