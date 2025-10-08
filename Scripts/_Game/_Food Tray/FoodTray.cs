@@ -54,15 +54,18 @@ public class FoodTray : Actor_Game {
    }
 
    void FixedUpdate(){
-      if(!isServer) return;
-      if ((_.gs as GameState_Game).splineContainer == null || !bInTrack) return;
+      if (!_.gs) { Debug.LogError("GS not found!"); return; }
+      if (!(_.gs as GameState_Game).splineContainer) { Debug.LogError("SplineContainer not found!"); return; }
+      
+      if (!bInTrack) return; // if not in track, don't move
+
       portionValue += .06f * Time.fixedDeltaTime;
 
-      var newPosition = (_.gs as GameState_Game).splineContainer.EvaluatePosition(portionValue); newPosition.y = 0.5f;
+      var newPosition = (_.gs as GameState_Game).splineContainer.EvaluatePosition(portionValue); newPosition.y = 1f;
       var tangent = (_.gs as GameState_Game).splineContainer.EvaluateTangent(portionValue);
       var faceDirection = tangent;
 
-      if (rb) { rb.MovePosition(newPosition); if (bPerserveMomentum) { rb.linearVelocity = math.normalize(tangent) * speed; } }
+      if (rb) { rb.MovePosition(newPosition); }
       else { transform.position = newPosition; }
 
       transform.rotation = Quaternion.LookRotation(faceDirection);

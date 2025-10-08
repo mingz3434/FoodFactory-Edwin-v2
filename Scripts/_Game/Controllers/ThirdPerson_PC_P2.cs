@@ -54,80 +54,63 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       // Self restriction.
       if(!status.bProjectileRecastable) return;
 
-      // Broadcast ver always first, broadcast pick food.
-      // if (!isLocalPlayer) { Cmd_Broadcast_SVE_PickFood(); return; }
+      if (this.extras.foodTraySlotTransform.childCount == 0){
+         PickFood();
+      }
 
-      Cmd_Broadcast_SVE_PickFood();
+      else if (this.extras.foodTraySlotTransform.childCount == 1){
+         ThrowFood();
+      }
 
+      else{
+         Debug.Log("ERROR: FoodTraySlotTransform has more than 1 child");
+      }
 
-      // Local ver.
-      // HI();
-      // SelfThrowFood_SwitchInput_and_RenderTraj();
    }
 
 
-
+   [Command] void Cmd_PassAuthorityPack(NetworkIdentity netID, FoodTray tray){
+      netID.AssignClientAuthority(connectionToClient);
+      Rpc_TargetSetParent_n_LockLocalPosition(tray);
+   }
 
    /// <summary>
    /// [Root++] (FoodTray) Server, OTE, broadcast server version entity transform, pick food set parent.
    /// </summary>
-   [Command] void Cmd_Broadcast_SVE_PickFood(){
-      //! Server version entity
-      if (!(this.extras.foodTraySlotTransform.childCount > 0)) {
-         Debug.Log("No food on hand! Now try pick food");
-         Physics.Raycast(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, out RaycastHit hit, 4f);
-         if (!hit.collider) return;
-         var tray = hit.collider.GetComponent<FoodTray>();
-         if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
-         Debug.Log(this.connectionToClient.address);
-         
-         
-         // tray.transform.SetParent(this.extras.foodTraySlotTransform);
-         tray.bInTrack = false; tray.RB_ResetStatic();
-         Tt(tray);
-         // !!!!!!
 
-         // this.GetComponent<NetworkIdentity>().AssignClientAuthority(this.connectionToClient);
-         Debug.Log("Food placed in Player's Food Slot!");
-         return;
-      }
-   }
 
    [TargetRpc]
-   void Tt(FoodTray tray){
+   void Rpc_TargetSetParent_n_LockLocalPosition(FoodTray tray){
       tray.transform.SetParent(this.extras.foodTraySlotTransform);
+      tray.bInTrack = false;
       tray.RB_ResetStatic();
       tray.T_ResetPositionRotation();
    }
 
-   [Command] void HI() { SelfPickFood(); }
-   /// <summary>
-   /// [Root++] (FoodTray) Local, OTE, pick the food tray that is in front of (45deg to ground) the player.
-   /// </summary>
-   [TargetRpc]
-   void SelfPickFood(){
-      if (this.extras.foodTraySlotTransform.childCount > 0) return;
+   void PickFood(){
       Physics.Raycast(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, out RaycastHit hit, 4f);
       if (!hit.collider) return;
-      var tray = hit.collider.GetComponent<FoodTray>();
-      if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
-      Debug.Log(this.connectionToClient.address);
+      if (!hit.collider.GetComponent<FoodTray>()) return; //!!!!!!!!!!!
 
-      tray.transform.SetParent(this.extras.foodTraySlotTransform);
-      tray.bInTrack = false;
-      // !!!!!!
+      //!!!!!!!!!!!!!!!!!!!!!!!!
+      Debug.Log("GO: "+hit.collider.gameObject.name);
+      Debug.Log("NID: "+hit.collider.GetComponent<NetworkIdentity>());
+      Debug.Log("FT: " + hit.collider.GetComponent<FoodTray>());
 
-      Debug.Log("Food picked up!");
-      return;
+      Cmd_PassAuthorityPack(hit.collider.GetComponent<NetworkIdentity>(), hit.collider.GetComponent<FoodTray>());
    }
+
 
    /// <summary>
    /// [Root++] (FoodTray) Local, OTE, switch input and start the throw food render traj updates. 
    /// </summary>
-   void SelfThrowFood_SwitchInput_and_RenderTraj(){
-      iv.bFoodTrayDragging = true;
+   void ThrowFood(){
+      // switch input
       this.playerInput.actions["Look"].Disable();
       this.playerInput.actions["DragXY"].Enable();
+
+      // render traj
+      iv.bFoodTrayDragging = true;
       var mousePosition = Input.mousePosition;
       this.trajs.dragStartPosition = mousePosition; Debug.Log(mousePosition);
       this.extras.trajectoryLine.lineRenderer.enabled = true;
