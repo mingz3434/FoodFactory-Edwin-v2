@@ -55,11 +55,14 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       if(!status.bProjectileRecastable) return;
 
       // Broadcast ver always first, broadcast pick food.
-      if (!isLocalPlayer) { Cmd_Broadcast_SVE_PickFood(); return; }
+      // if (!isLocalPlayer) { Cmd_Broadcast_SVE_PickFood(); return; }
+
+      Cmd_Broadcast_SVE_PickFood();
+
 
       // Local ver.
-      SelfPickFood();
-      SelfThrowFood_SwitchInput_and_RenderTraj();
+      // SelfPickFood();
+      // SelfThrowFood_SwitchInput_and_RenderTraj();
    }
 
 
