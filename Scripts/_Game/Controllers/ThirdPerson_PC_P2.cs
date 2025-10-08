@@ -61,7 +61,7 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
 
 
       // Local ver.
-      // SelfPickFood();
+      // HI();
       // SelfThrowFood_SwitchInput_and_RenderTraj();
    }
 
@@ -82,9 +82,9 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
          Debug.Log(this.connectionToClient.address);
          
          
-         tray.transform.SetParent(this.extras.foodTraySlotTransform);
-         tray.bInTrack = false;
-         RpcSyncFoodTray(tray.netId);
+         // tray.transform.SetParent(this.extras.foodTraySlotTransform);
+         tray.bInTrack = false; tray.RB_ResetStatic();
+         Tt(tray);
          // !!!!!!
 
          // this.GetComponent<NetworkIdentity>().AssignClientAuthority(this.connectionToClient);
@@ -93,22 +93,18 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       }
    }
 
-[ClientRpc]
-void RpcSyncFoodTray(uint trayNetId)
-{
-    // 在客戶端更新父物件和狀態
-    var tray = NetworkClient.spawned[trayNetId].GetComponent<FoodTray>();
-    if (tray)
-    {
-        tray.transform.SetParent(this.extras.foodTraySlotTransform);
-tray.bInTrack = false;
+   [TargetRpc]
+   void Tt(FoodTray tray){
+      tray.transform.SetParent(this.extras.foodTraySlotTransform);
+      tray.RB_ResetStatic();
+      tray.T_ResetPositionRotation();
+   }
 
-    }
-}
-
+   [Command] void HI() { SelfPickFood(); }
    /// <summary>
    /// [Root++] (FoodTray) Local, OTE, pick the food tray that is in front of (45deg to ground) the player.
    /// </summary>
+   [TargetRpc]
    void SelfPickFood(){
       if (this.extras.foodTraySlotTransform.childCount > 0) return;
       Physics.Raycast(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, out RaycastHit hit, 4f);
@@ -117,9 +113,8 @@ tray.bInTrack = false;
       if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
       Debug.Log(this.connectionToClient.address);
 
-      tray.bInTrack = false;
       tray.transform.SetParent(this.extras.foodTraySlotTransform);
-
+      tray.bInTrack = false;
       // !!!!!!
 
       Debug.Log("Food picked up!");
