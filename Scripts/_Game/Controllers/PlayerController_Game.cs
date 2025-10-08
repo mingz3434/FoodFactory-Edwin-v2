@@ -108,7 +108,7 @@ public class PlayerController_Game : PlayerController{
       //P: If it's food, no more move.
       if (hit.collider.CompareTag("Food")){
          var foodTray = hit.collider.gameObject.GetComponent<FoodTray>();
-         foodTray.SnapTo(pChar.slotTransform);
+         // foodTray.Cmd_SnapTo(pChar.slotTransform);
          foodTray.bInTrack = false; // !!!!!!
          Debug.Log("Food placed in Player's Food Slot!");
       }

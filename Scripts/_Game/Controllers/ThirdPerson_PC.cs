@@ -26,6 +26,8 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
    [Serializable] public class AnimSettings { [ReadOnly] public float blendedValue; [HideInInspector] public int speed_Id, loco_Id, jumping_Id, punching_Id; public bool bLoco, bJumping; }
    [Serializable] public class InputValues { public bool bLocal; public Vector2 move, look, dragXY; public bool bSprint; public bool bHookDragging, bFoodTrayDragging; }
 
+   [Serializable] public class DebugToggle { public bool bCastPickFoodRay; }
+
    public enum AnimationState { Locomotion, Jumping, Punching }
    public AnimationState animationState = AnimationState.Locomotion;
 
@@ -34,6 +36,7 @@ public partial class ThirdPerson_PC : NetworkBehaviour {
    public CameraSettings cameras;
    public AudioSettings audios;
    public AnimSettings _a;
+   public DebugToggle _debug;
 
    PlayerInput playerInput;
    public InputValues iv;

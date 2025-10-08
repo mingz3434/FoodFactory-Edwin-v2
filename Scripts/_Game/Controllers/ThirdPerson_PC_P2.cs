@@ -15,11 +15,20 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
    public TrajectoryParams trajs;
    public Status status;
 
+   /// <summary>
+   /// Local updates, part 2, triggering local events and broadcast events.
+   /// </summary>
    void Update_P2(){
       if (iv.bHookDragging) OnHookDragging();
       if (iv.bFoodTrayDragging) OnFoodTrayDragging();
+
+      if (Input.GetKeyDown(KeyCode.Alpha3)) { _debug.bCastPickFoodRay = !_debug.bCastPickFoodRay; }
+      if(_debug.bCastPickFoodRay){ Debug.Log("Y");Debug.DrawRay(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, Color.red); }
    }
 
+   /// <summary>
+   /// [Root+] (Hook) Local, one-time-event, enabling Drag input, disabling Look input, start to record the drag delta.
+   /// </summary>
    void OnHookDraggingToggle_KeyDown_G(InputAction.CallbackContext context){
       if(!status.bProjectileRecastable) return;
       iv.bHookDragging = true;
@@ -30,28 +39,82 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       this.extras.trajectoryLine.lineRenderer.enabled = true;
    }
 
+   /// <summary>
+   /// [Root+] (Hook) Local, to trigger local+broadcast event, one-time-event, fire the hook. 
+   /// </summary>
    void OnHookDraggingToggle_KeyUp_G(InputAction.CallbackContext context){
       if (!iv.bHookDragging) return;
       FireHook(this.trajs.dragging_VelocityCombined);
    }
 
+   /// <summary>
+   /// [Root+] (FoodTray) Local, to trigger local+broadcast event, one-time-event, pick food or throw food.
+   /// </summary>
    void OnPickFood_or_OnFoodTrayDraggingToggle_KeyDown_F(InputAction.CallbackContext context){
+      // Self restriction.
       if(!status.bProjectileRecastable) return;
 
-      // Pick Food
+      // Broadcast ver always first, broadcast pick food.
+      if (!isLocalPlayer) { Cmd_Broadcast_SVE_PickFood(); return; }
+
+      // Local ver.
+      SelfPickFood();
+      SelfThrowFood_SwitchInput_and_RenderTraj();
+   }
+
+
+
+
+   /// <summary>
+   /// [Root++] (FoodTray) Server, OTE, broadcast server version entity transform, pick food set parent.
+   /// </summary>
+   [Command] void Cmd_Broadcast_SVE_PickFood(){
+      //! Server version entity
       if (!(this.extras.foodTraySlotTransform.childCount > 0)) {
          Debug.Log("No food on hand! Now try pick food");
-         Physics.Raycast(character.transform.position, character.transform.forward + Vector3.down*.3f, out RaycastHit hit, 4f);
+         Physics.Raycast(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, out RaycastHit hit, 4f);
          if (!hit.collider) return;
          var tray = hit.collider.GetComponent<FoodTray>();
          if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
-         tray.SnapTo(extras.foodTraySlotTransform);
-         tray.Set_NoMoreInTrack(); // !!!!!!
+         Debug.Log(this.connectionToClient.address);
+         
+         tray.bInTrack = false;
+         tray.transform.SetParent(this.extras.foodTraySlotTransform);
+         tray.T_ResetPositionRotation();
+         tray.RB_ResetStatic();
+         // !!!!!!
+
+         // this.GetComponent<NetworkIdentity>().AssignClientAuthority(this.connectionToClient);
          Debug.Log("Food placed in Player's Food Slot!");
          return;
       }
+   }
 
-      // Drag Food Tray to throw
+   /// <summary>
+   /// [Root++] (FoodTray) Local, OTE, pick the food tray that is in front of (45deg to ground) the player.
+   /// </summary>
+   void SelfPickFood(){
+      if (this.extras.foodTraySlotTransform.childCount > 0) return;
+      Physics.Raycast(character.transform.position+ Vector3.up*1.2f+ character.transform.forward*.4f, character.transform.forward + Vector3.down, out RaycastHit hit, 4f);
+      if (!hit.collider) return;
+      var tray = hit.collider.GetComponent<FoodTray>();
+      if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
+      Debug.Log(this.connectionToClient.address);
+
+      tray.bInTrack = false;
+      tray.transform.SetParent(this.extras.foodTraySlotTransform);
+      tray.T_ResetPositionRotation();
+      tray.RB_ResetStatic();
+      // !!!!!!
+
+      Debug.Log("Food picked up!");
+      return;
+   }
+
+   /// <summary>
+   /// [Root++] (FoodTray) Local, OTE, switch input and start the throw food render traj updates. 
+   /// </summary>
+   void SelfThrowFood_SwitchInput_and_RenderTraj(){
       iv.bFoodTrayDragging = true;
       this.playerInput.actions["Look"].Disable();
       this.playerInput.actions["DragXY"].Enable();
@@ -60,21 +123,34 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       this.extras.trajectoryLine.lineRenderer.enabled = true;
    }
 
+   /// <summary>
+   /// [Root+] (FoodTray) Local->BC+Self, OTE, fire the food tray.
+   /// </summary>
    void OnFoodTrayDraggingToggle_KeyUp_F(InputAction.CallbackContext context){
       if (!iv.bFoodTrayDragging) return;
       FireFoodPlate(this.trajs.dragging_VelocityCombined);
    }
 
+   /// <summary>
+   /// [Root+] (Hook) Local, updates, showing the dragging trajectory of the HOOK.
+   /// </summary>
    void OnHookDragging(){
       trajs.dragging_VelocityCombined = GetVelocityCombined_By_Calculating_DragDistance();
       UpdateDrawTrajectoryLine_LineRenderer(this.extras.hookContainerTransform.position, trajs.dragging_VelocityCombined);
    }
 
+   /// <summary>
+   /// [Root+] (Hook) Local, updates, showing the dragging trajectory of the FOOD TRAY.
+   /// </summary>
    void OnFoodTrayDragging(){
       trajs.dragging_VelocityCombined = GetVelocityCombined_By_Calculating_DragDistance();
       UpdateDrawTrajectoryLine_LineRenderer(this.extras.foodTraySlotTransform.position, trajs.dragging_VelocityCombined);
    }
 
+
+   /// <summary>
+   /// [Root++] (FoodTray+Hook) Local, updates, showing the dragging trajectory of the FOOD TRAY / HOOK.
+   /// </summary>
    void UpdateDrawTrajectoryLine_LineRenderer(Vector3 startPos, Vector3 velocityCombined){
       var points = new Vector3[50];
       for (int i = 0; i < 50; i++){ //P: hardcode 50 temporary
@@ -85,6 +161,9 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
    }
 
 
+   /// <summary>
+   /// [Root++] (Hook) Local->BC+Self, OTE, fire the hook.
+   /// </summary>
    void FireHook(Vector3 velocity){
       var hook = this.extras.hook;
       hook.transform.SetParent(null);
@@ -108,7 +187,9 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       });
    }
 
-
+   /// <summary>
+   /// [Root++] (FoodTray) Local->BC+Self, OTE, fire the food tray.
+   /// </summary>
    void FireFoodPlate(Vector3 velocity){
       var firstFood_FoodTray = this.extras.foodTraySlotTransform.GetChild(0).gameObject.GetComponent<FoodTray>();
       firstFood_FoodTray.transform.SetParent(null);
@@ -133,7 +214,9 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
    }
 
 
-
+   /// <summary>
+   /// Just a math helper.
+   /// </summary>
    // ! Complex math getters
    Vector3 GetVelocityCombined_By_Calculating_DragDistance(){
       //* Remarks: Here only calculating input delta, no lineRenderer involved.
@@ -159,10 +242,16 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
       return velocity_Combined;
    }
 
+   /// <summary>
+   /// Local, just a very simple setter of setting status of whether the projectile is recastable.
+   /// </summary>
    public void SetStatus_Recastable(){
       this.status.bProjectileRecastable = true;
    }
 
+   /// <summary>
+   /// Local, just a very simple setter of setting status of whether the projectile is recastable.
+   /// </summary>
    public void SetStatus_NotRecastable(){
       this.status.bProjectileRecastable = false;
    }

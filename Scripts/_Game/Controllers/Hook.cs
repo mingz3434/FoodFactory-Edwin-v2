@@ -20,12 +20,13 @@ public class Hook : MonoBehaviour{
    }
 
    void OnFoodTrayHit(FoodTray tray){
+      if(!this.transform.parent.parent.GetComponent<ThirdPerson_PC>().isServer) return;
       Debug.Log("Hook: The collision hit object is a FoodTray.");
 
       tray.transform.SetParent(_.localPlayer.extras.foodTraySlotTransform);
       tray.transform.localPosition = Vector3.zero;
       tray.RB_ResetStatic();
-      tray.Set_NoMoreInTrack();
+      tray.bInTrack = false;
 
       this.ReattachHookContainer_ResetTransform(_.localPlayer.extras.hookContainerTransform);
       this.RB_ResetStatic();
