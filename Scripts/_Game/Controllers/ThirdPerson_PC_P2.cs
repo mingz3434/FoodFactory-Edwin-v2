@@ -81,10 +81,10 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
          if (!tray) { Debug.Log("No foodTray in front of you!"); return; }
          Debug.Log(this.connectionToClient.address);
          
-         tray.bInTrack = false;
+         
          tray.transform.SetParent(this.extras.foodTraySlotTransform);
-         tray.T_ResetPositionRotation();
-         tray.RB_ResetStatic();
+         tray.bInTrack = false;
+         RpcSyncFoodTray(tray.netId);
          // !!!!!!
 
          // this.GetComponent<NetworkIdentity>().AssignClientAuthority(this.connectionToClient);
@@ -92,6 +92,19 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
          return;
       }
    }
+
+[ClientRpc]
+void RpcSyncFoodTray(uint trayNetId)
+{
+    // 在客戶端更新父物件和狀態
+    var tray = NetworkClient.spawned[trayNetId].GetComponent<FoodTray>();
+    if (tray)
+    {
+        tray.transform.SetParent(this.extras.foodTraySlotTransform);
+tray.bInTrack = false;
+
+    }
+}
 
    /// <summary>
    /// [Root++] (FoodTray) Local, OTE, pick the food tray that is in front of (45deg to ground) the player.
@@ -106,8 +119,7 @@ public partial class ThirdPerson_PC : NetworkBehaviour{
 
       tray.bInTrack = false;
       tray.transform.SetParent(this.extras.foodTraySlotTransform);
-      tray.T_ResetPositionRotation();
-      tray.RB_ResetStatic();
+
       // !!!!!!
 
       Debug.Log("Food picked up!");
